@@ -1,0 +1,140 @@
+package com.shoes.webshoes.controller;
+
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.shoes.webshoes.common.utils.Pagination;
+import com.shoes.webshoes.common.utils.StringErrorValue;
+import com.shoes.webshoes.entity.{{entity}};
+import com.shoes.webshoes.model.StoreProcedureListResult;
+import com.shoes.webshoes.request.CRUD{{entity}}Request;
+import com.shoes.webshoes.response.BaseListDataResponse;
+import com.shoes.webshoes.response.BaseResponse;
+import com.shoes.webshoes.response.{{entity}}Response;
+import com.shoes.webshoes.service.{{entity}}Service;
+
+
+@RestController
+@RequestMapping("/api/v1/{{lowerCase entity}}")
+public class {{entity}}Controller  {
+    @Autowired
+    public {{entity}}Service {{lowerCase entity}}Service;
+
+    @GetMapping("")
+//	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	public ResponseEntity<BaseResponse<BaseListDataResponse<{{entity}}Response>>> getAll(
+			@RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
+			@RequestParam(name = "status", required = false, defaultValue = "-1") int status,
+			@RequestParam(name = "page", required = false, defaultValue = "1") int page,
+			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
+		BaseResponse<BaseListDataResponse<{{entity}}Response>> response = new BaseResponse<>();
+		Pagination pagination = new Pagination(page, limit);
+		StoreProcedureListResult<{{entity}}> list{{entity}} = {{lowerCase entity}}Service.spGList{{entity}}(keySearch,
+				status, pagination);
+
+		BaseListDataResponse<{{entity}}Response> listData = new BaseListDataResponse<>();
+
+		listData.setList(new {{entity}}Response().mapToList(list{{entity}}.getResult()));
+		listData.setTotalRecord(list{{entity}}.getTotalRecord());
+
+		response.setData(listData);
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+    
+    @GetMapping("/{id}")
+	public ResponseEntity<BaseResponse<{{entity}}Response>> findOneById(@PathVariable("id") int id) throws Exception {
+		BaseResponse<{{entity}}Response> response = new BaseResponse<>();
+		{{entity}} {{lowerCase entity}} = {{lowerCase entity}}Service.findOne(id);
+
+		if ({{lowerCase entity}} == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.{{upperCase entity}}_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+        response.setData(new {{entity}}Response({{lowerCase entity}}));
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PostMapping("/{id}/change-status")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	public ResponseEntity<BaseResponse<{{entity}}Response>> changeStatus(@PathVariable("id") int id) throws Exception {
+		BaseResponse<{{entity}}Response> response = new BaseResponse<>();
+		{{entity}} {{lowerCase entity}} = {{lowerCase entity}}Service.findOne(id);
+
+		if ({{lowerCase entity}} == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.{{upperCase entity}}_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		{{lowerCase entity}}.setStatus({{lowerCase entity}}.getStatus() == 1 ? 0 : 1);
+
+		{{lowerCase entity}}Service.update({{lowerCase entity}});
+        response.setData(new {{entity}}Response({{lowerCase entity}}));
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PostMapping("/create")
+	public ResponseEntity<BaseResponse<{{entity}}Response>> create(
+			@Valid @RequestBody CRUD{{entity}}Request wrapper) throws Exception {
+
+		BaseResponse<{{entity}}Response> response = new BaseResponse<>();
+		{{entity}} {{lowerCase entity}}Check = {{lowerCase entity}}Service.findByName(wrapper.getName());
+
+		if ({{lowerCase entity}}Check != null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.{{upperCase entity}}_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		{{entity}} {{lowerCase entity}} = new {{entity}}();
+		{{lowerCase entity}}.setName(wrapper.getName());
+		{{lowerCase entity}}.setStatus(1);
+
+		{{lowerCase entity}}Service.create({{lowerCase entity}});
+		response.setData(new {{entity}}Response({{lowerCase entity}}));
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PostMapping("/{id}/update")
+	public ResponseEntity<BaseResponse<{{entity}}Response>> update(@PathVariable("id") int id,
+			@Valid @RequestBody CRUD{{entity}}Request wrapper) throws Exception {
+
+		BaseResponse<{{entity}}Response> response = new BaseResponse<>();
+		{{entity}} {{lowerCase entity}} = {{lowerCase entity}}Service.findOne(id);
+
+		if ({{lowerCase entity}} == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.{{upperCase entity}}_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		if (!{{lowerCase entity}}.getName().equals(wrapper.getName())
+				&& {{lowerCase entity}}Service.findByName(wrapper.getName()) != null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.{{upperCase entity}}_IS_EXIST);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+
+		}
+		{{lowerCase entity}}.setName(wrapper.getName());
+		{{lowerCase entity}}Service.update({{lowerCase entity}});
+
+		response.setData(new {{entity}}Response({{lowerCase entity}}));
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+}

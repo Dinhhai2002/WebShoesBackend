@@ -1,0 +1,20 @@
+package com.shoes.webshoes.dao;
+
+import java.util.List;
+import com.shoes.webshoes.common.utils.Pagination;
+import com.shoes.webshoes.model.StoreProcedureListResult;
+import com.shoes.webshoes.entity.{{entity}};
+
+public interface {{entity}}Dao {
+    void create({{entity}} {{lowerCase entity}});
+
+    {{entity}} findOne(int id);
+
+    void update({{entity}} {{lowerCase entity}});
+
+    List<{{entity}}> getAll();
+
+    StoreProcedureListResult<{{entity}}> spGList{{entity}}(String keySearch,int status,Pagination pagination) throws Exception;
+
+    {{entity}} findByName(String name);
+}

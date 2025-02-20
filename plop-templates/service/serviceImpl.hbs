@@ -1,0 +1,51 @@
+package com.shoes.webshoes.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.shoes.webshoes.common.utils.Pagination;
+import com.shoes.webshoes.dao.{{entity}}Dao;
+import com.shoes.webshoes.entity.{{entity}};
+import com.shoes.webshoes.model.StoreProcedureListResult;
+import com.shoes.webshoes.service.{{entity}}Service;
+
+@Service("{{entity}}Service")
+@Transactional(rollbackFor = Error.class)
+public class {{entity}}ServiceImpl implements {{entity}}Service {
+    @Autowired
+    private {{entity}}Dao {{lowerCase entity}}Dao;
+
+    @Override
+    public void create({{entity}} {{lowerCase entity}}) {
+        {{lowerCase entity}}Dao.create({{lowerCase entity}});
+    }
+
+    @Override
+    public {{entity}} findOne(int id) {
+        return {{lowerCase entity}}Dao.findOne(id);
+    }
+
+    @Override
+    public void update({{entity}} {{lowerCase entity}}) {
+        {{lowerCase entity}}Dao.update({{lowerCase entity}});
+    }
+
+    @Override
+    public List<{{entity}}> getAll() {
+        return {{lowerCase entity}}Dao.getAll();
+    }
+
+    @Override
+    public {{entity}} findByName(String name) {
+        return {{lowerCase entity}}Dao.findByName(name);
+    }
+
+    @Override
+	public StoreProcedureListResult<{{entity}}> spGList{{entity}}(String keySearch, int status,
+			Pagination pagination) throws Exception {
+		return {{lowerCase entity}}Dao.spGList{{entity}}(keySearch, status, pagination);
+	}
+}
