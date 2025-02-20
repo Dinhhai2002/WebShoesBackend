@@ -30,5 +30,8 @@ public class StringErrorValue {
 	public static final String SIZE_NOT_FOUND = "size không tồn tại!";
 	public static final String SIZE_IS_EXIST = "size đã tồn tại!";
 
+	public static final String COLOR_NOT_FOUND = "màu sắc không tồn tại!";
+	public static final String COLOR_IS_EXIST = "màu sắc đã tồn tại!";
+
 	
 }
