@@ -1,0 +1,31 @@
+package com.shoes.webshoes.response;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.shoes.webshoes.entity.{{entity}};
+
+import lombok.Data;
+
+@Data
+public class {{entity}}Response {
+    private int id;
+
+	private String name;
+
+	private int status;
+
+	public {{entity}}Response() {
+
+	}
+
+	public {{entity}}Response({{entity}} entity) {
+		this.id = entity.getId();
+		this.name = entity.getName();
+		this.status = entity.getStatus();
+	}
+
+	public List<{{entity}}Response> mapToList(List<{{entity}}> entities) {
+		return entities.stream().map(x -> new {{entity}}Response(x)).collect(Collectors.toList());
+	}
+}

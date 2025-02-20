@@ -11,6 +11,11 @@ module.exports = function (plop) {
       actions: [
         {
           type: "add",
+          path: "src/main/java/com/shoes/webshoes/entity/{{entity}}.java",
+          templateFile: "plop-templates/entity/entity.hbs",
+        },
+        {
+          type: "add",
           path: "src/main/java/com/shoes/webshoes/dao/{{entity}}Dao.java",
           templateFile: "plop-templates/dao/dao.hbs",
         },
@@ -33,6 +38,16 @@ module.exports = function (plop) {
           type: "add",
           path: "src/main/java/com/shoes/webshoes/controller/{{entity}}Controller.java",
           templateFile: "plop-templates/controller/controller.hbs",
+        },
+        {
+          type: "add",
+          path: "src/main/java/com/shoes/webshoes/request/CRUD{{entity}}Request.java",
+          templateFile: "plop-templates/request/request.hbs",
+        },
+        {
+          type: "add",
+          path: "src/main/java/com/shoes/webshoes/response/{{entity}}Response.java",
+          templateFile: "plop-templates/response/response.hbs",
         },
       ],
     });
