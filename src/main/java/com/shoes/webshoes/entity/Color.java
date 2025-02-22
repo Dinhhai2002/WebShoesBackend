@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @Entity
-@Table(name = "sizes")
-public class Size extends BaseEntity{
+@Table(name = "colors")
+public class Color extends BaseEntity{
     /**
 	 * 
 	 */
