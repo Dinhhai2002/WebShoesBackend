@@ -5,7 +5,9 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -179,6 +181,33 @@ public class UserController extends BaseController {
 
 		response.setData(new ImageResponse(image));
 
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PostMapping("/{id}/change-status")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	public ResponseEntity<BaseResponse<UserResponse>> changeStatus(@PathVariable("id") int id) throws Exception {
+		BaseResponse<UserResponse> response = new BaseResponse<>();
+		Users currentUser = this.getUser();
+		Users user = userService.findOne(id);
+
+		if (user == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.USER_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		if (user.getId() == currentUser.getId()) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.USER_NOT_LOCK);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+
+		}	
+
+		user.setIsActive(user.getIsActive() == 1 ? 0 : 1);
+
+		userService.update(user);
+		response.setData(new UserResponse(user));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
