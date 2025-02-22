@@ -32,6 +32,8 @@ public class StringErrorValue {
 
 	public static final String COLOR_NOT_FOUND = "màu sắc không tồn tại!";
 	public static final String COLOR_IS_EXIST = "màu sắc đã tồn tại!";
+	public static final String MATERIALS_NOT_FOUND = "chất liệu không tồn tại!";
+	public static final String MATERIALS_IS_EXIST = "chất liệu đã tồn tại!";
 
 	
 }
