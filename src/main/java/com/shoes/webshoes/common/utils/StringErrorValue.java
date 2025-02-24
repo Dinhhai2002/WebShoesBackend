@@ -43,6 +43,8 @@ public class StringErrorValue {
 	public static final String PRODUCT_NOT_FOUND = "sản phẩm không tồn tại!";
 	public static final String PRODUCT_IS_EXIST = "sản phẩm đã tồn tại!";
 
+	public static final String PRODUCT_DETAIL_NOT_FOUND = "chi tiết sản phẩm không tồn tại!";
+	public static final String PRODUCT_DETAIL_IS_EXIST = "chi tiết sản phẩm đã tồn tại!";
 
-	
+
 }

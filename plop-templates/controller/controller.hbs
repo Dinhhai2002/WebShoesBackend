@@ -97,7 +97,7 @@ public class {{entity}}Controller  {
 
 		if ({{lowerCase entity}}Check != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.{{upperCase entity}}_NOT_FOUND);
+			response.setMessageError(StringErrorValue.{{upperCase entity}}_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 

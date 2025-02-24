@@ -1,0 +1,68 @@
+package com.shoes.webshoes.response;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.shoes.webshoes.entity.ProductDetail;
+
+import lombok.Data;
+
+@Data
+public class ProductDetailResponse {
+    private int id;
+
+	private String name;
+
+	@JsonProperty("product_id")
+	private int productId;
+
+	@JsonProperty("color_id")
+	private int colorId;
+
+	private String color;
+	
+	@JsonProperty("size_id")
+	private int sizeId;
+
+	private String size;
+
+	@JsonProperty("material_id")
+	private int materialId;
+
+	private String material;
+
+	private int stock;
+
+	private BigDecimal price;
+
+	@JsonProperty("image_url")
+	private String imageUrl; 
+
+	private int status;
+
+	public ProductDetailResponse() {
+
+	}
+
+	public ProductDetailResponse(ProductDetail entity) {
+		this.id = entity.getId();
+		this.name = entity.getName();
+		this.productId = entity.getProductId();
+		this.colorId = entity.getColorId();
+		this.color = entity.getColor();
+		this.size = entity.getSize();
+		this.sizeId = entity.getSizeId();
+		this.materialId = entity.getMaterialId();
+		this.material = entity.getMaterial();
+		this.stock = entity.getStock();
+		this.price = entity.getPrice();
+		this.imageUrl = entity.getImageUrl();
+		this.status = entity.getStatus();
+	}
+
+	public List<ProductDetailResponse> mapToList(List<ProductDetail> entities) {
+		return entities.stream().map(x -> new ProductDetailResponse(x)).collect(Collectors.toList());
+	}
+}
