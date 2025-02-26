@@ -1,6 +1,9 @@
 package com.shoes.webshoes.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -19,13 +22,19 @@ import org.springframework.web.bind.annotation.RestController;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.entity.Cart;
+import com.shoes.webshoes.entity.CartDetail;
+import com.shoes.webshoes.entity.ProductDetail;
 import com.shoes.webshoes.entity.Users;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDCartRequest;
 import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
+import com.shoes.webshoes.response.CartDetailResponse;
 import com.shoes.webshoes.response.CartResponse;
+import com.shoes.webshoes.response.ProductDetailResponse;
+import com.shoes.webshoes.service.CartDetailService;
 import com.shoes.webshoes.service.CartService;
+import com.shoes.webshoes.service.ProductDetailService;
 
 
 @RestController
@@ -33,6 +42,12 @@ import com.shoes.webshoes.service.CartService;
 public class CartController extends BaseController {
     @Autowired
     public CartService cartService;
+
+	@Autowired
+    public CartDetailService cartDetailService;
+	
+	@Autowired
+    public ProductDetailService productDetailService;
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -67,7 +82,25 @@ public class CartController extends BaseController {
 			response.setMessageError(StringErrorValue.CART_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-        response.setData(new CartResponse(cart));
+		List<CartDetail> listCartDetail = cartDetailService.spGListCartDetail(id, "", 1, new Pagination(0, 20)).getResult();
+		
+		List<Integer> listProductDetailIds = listCartDetail.stream()
+				.map(item->item.getProductDetailId()).collect(Collectors.toList());
+		
+		List<ProductDetail> productDetails = productDetailService.findByIds(listProductDetailIds);
+		
+		Map<Integer, ProductDetail> productDetailMap = new HashMap<>();
+		for (ProductDetail productDetail : productDetails) {
+			productDetailMap.put(productDetail.getId(), productDetail);
+		}
+		
+//		List<CartDetailResponse> cartDetailResponses = new CartDetailResponse().mapToList(listCartDetail);
+		List<CartDetailResponse> cartDetailResponses = listCartDetail.stream().map(cartDetail -> {
+			ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
+
+			return new CartDetailResponse(cartDetail, new ProductDetailResponse(productDetail));
+		}).collect(Collectors.toList());
+        response.setData(new CartResponse(cart,cartDetailResponses));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

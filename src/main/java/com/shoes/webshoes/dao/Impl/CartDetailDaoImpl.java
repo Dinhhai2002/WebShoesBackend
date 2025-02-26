@@ -1,6 +1,5 @@
 package com.shoes.webshoes.dao.Impl;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.ParameterMode;
@@ -17,42 +16,42 @@ import com.shoes.webshoes.common.enums.StoreProcedureStatusCodeEnum;
 import com.shoes.webshoes.common.exception.TechresHttpException;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.dao.AbstractDao;
-import com.shoes.webshoes.dao.ProductDetailDao;
-import com.shoes.webshoes.entity.ProductDetail;
+import com.shoes.webshoes.dao.CartDetailDao;
+import com.shoes.webshoes.entity.CartDetail;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 
-@Repository("ProductDetailDao")
+@Repository("CartDetailDao")
 @Transactional
-public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> implements ProductDetailDao {
+public class CartDetailDaoImpl extends AbstractDao<Integer, CartDetail> implements CartDetailDao {
     @Override
-    public void create(ProductDetail productDetail) {
-       this.getSession().save(productDetail);
+    public void create(CartDetail cartDetail) {
+       this.getSession().save(cartDetail);
     }
 
     @Override
-    public ProductDetail findOne(int id) {
-       return this.getSession().find(ProductDetail.class,id);
+    public CartDetail findOne(int id) {
+       return this.getSession().find(CartDetail.class,id);
     }
 
     @Override
-    public void update(ProductDetail productDetail) {
-       this.getSession().update(productDetail);	
+    public void update(CartDetail cartDetail) {
+       this.getSession().update(cartDetail);	
     }
 
     @Override
-    public List<ProductDetail> getAll() {
+    public List<CartDetail> getAll() {
        CriteriaBuilder builder = this.getBuilder();
-		CriteriaQuery<ProductDetail> query = builder.createQuery(ProductDetail.class);
-		Root<ProductDetail> root = query.from(ProductDetail.class);
+		CriteriaQuery<CartDetail> query = builder.createQuery(CartDetail.class);
+		Root<CartDetail> root = query.from(CartDetail.class);
 
 		return this.getSession().createQuery(query).getResultList();
     }
 
     @Override
-    public ProductDetail findByName(String name) {
+    public CartDetail findByName(String name) {
         CriteriaBuilder builder = this.getBuilder();
-		CriteriaQuery<ProductDetail> query = builder.createQuery(ProductDetail.class);
-		Root<ProductDetail> root = query.from(ProductDetail.class);
+		CriteriaQuery<CartDetail> query = builder.createQuery(CartDetail.class);
+		Root<CartDetail> root = query.from(CartDetail.class);
 		query.where(builder.equal(root.get("name"), name));
 
 		return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
@@ -60,13 +59,10 @@ public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> im
 
     @SuppressWarnings("unchecked")
 	@Override
-	public StoreProcedureListResult<ProductDetail> spGListProductDetail(int productId, int colorId, int sizeId, int materialId, String keySearch, int status, Pagination pagination)
+	public StoreProcedureListResult<CartDetail> spGListCartDetail(int cartId, String keySearch, int status, Pagination pagination)
 			throws Exception {
-		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_product_detail", ProductDetail.class)
-				.registerStoredProcedureParameter("productId", Integer.class, ParameterMode.IN)
-				.registerStoredProcedureParameter("colorId", Integer.class, ParameterMode.IN)
-				.registerStoredProcedureParameter("sizeId", Integer.class, ParameterMode.IN)
-				.registerStoredProcedureParameter("materialId", Integer.class, ParameterMode.IN)
+		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_cart_detail", CartDetail.class)
+				.registerStoredProcedureParameter("cartId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("keySearch", String.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("status", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("_limit", Integer.class, ParameterMode.IN)
@@ -76,10 +72,7 @@ public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> im
 				.registerStoredProcedureParameter("status_code", Integer.class, ParameterMode.OUT)
 				.registerStoredProcedureParameter("message_error", String.class, ParameterMode.OUT);
 
-		query.setParameter("productId", productId);
-		query.setParameter("colorId", colorId);
-		query.setParameter("sizeId", sizeId);
-		query.setParameter("materialId", materialId);
+		query.setParameter("cartId", cartId);
 		query.setParameter("keySearch", keySearch);
 		query.setParameter("status", status);
 		query.setParameter("_limit", pagination.getLimit());
@@ -98,19 +91,4 @@ public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> im
 			throw new Exception(messageError);
 		}
 	}
-    
-    @Override
-    public List<ProductDetail> findByIds(List<Integer> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        CriteriaBuilder builder = this.getBuilder();
-        CriteriaQuery<ProductDetail> query = builder.createQuery(ProductDetail.class);
-        Root<ProductDetail> root = query.from(ProductDetail.class);
-
-        query.select(root).where(root.get("id").in(ids));
-
-        return this.getSession().createQuery(query).getResultList();
-    }
 }

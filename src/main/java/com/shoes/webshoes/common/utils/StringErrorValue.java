@@ -49,5 +49,11 @@ public class StringErrorValue {
 	public static final String CART_NOT_FOUND = "giỏ hàng không tồn tại!";
 	public static final String CART_IS_EXIST = "giỏ hàng đã tồn tại!";
 
+	public static final String CART_DETAIL_NOT_FOUND = "giỏ hàng chi tiết không tồn tại!";
+	public static final String CART_DETAIL_IS_EXIST = "giỏ hàng chi tiết đã tồn tại!";
+	
+	public static final String PRODUCT_DETAIL_NOT_IN_CART = "sản phẩm này không nằm trong giỏ hàng hoặc không tồn tại";
+	public static final String PRODUCT_DETAIL_NOT_INSUFFICIENT_QUANTITY = "Số lượng sản phẩm trong kho không đáp ứng đủ số lượng,vui lòng chọn số lượng nhỏ hơn để mua hàng!";
+
 
 }

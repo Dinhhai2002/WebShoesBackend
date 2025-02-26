@@ -12,12 +12,13 @@ import lombok.Data;
 public class CartResponse {
     private int id;
 
-	private String name;
-
 	@JsonProperty("user_id")
 	private int userId;
 
 	private int status;
+	
+	@JsonProperty("cart_detail")
+	private List<CartDetailResponse> cartDetailResponses;
 
 	public CartResponse() {
 
@@ -27,6 +28,12 @@ public class CartResponse {
 		this.id = entity.getId();
 		this.userId = entity.getUserId();
 		this.status = entity.getStatus();
+	}
+	public CartResponse(Cart entity, List<CartDetailResponse> cartDetailResponses) {
+		this.id = entity.getId();
+		this.userId = entity.getUserId();
+		this.status = entity.getStatus();
+		this.cartDetailResponses = cartDetailResponses;
 	}
 
 	public List<CartResponse> mapToList(List<Cart> entities) {

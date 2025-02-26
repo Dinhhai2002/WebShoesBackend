@@ -1,6 +1,7 @@
 package com.shoes.webshoes.controller;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import javax.validation.Valid;
@@ -16,10 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.shoes.webshoes.common.enums.OtpEnum;
 import com.shoes.webshoes.common.utils.HttpService;
+import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.common.utils.Utils;
+import com.shoes.webshoes.entity.Cart;
 import com.shoes.webshoes.entity.UserRegister;
 import com.shoes.webshoes.entity.Users;
+import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDUserRequest;
 import com.shoes.webshoes.request.ConfirmOtpRequest;
 import com.shoes.webshoes.request.GoogleAccountRequest;
@@ -30,6 +34,7 @@ import com.shoes.webshoes.request.ResetPasswordRequest;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.JwtResponse;
 import com.shoes.webshoes.response.UserResponse;
+import com.shoes.webshoes.service.CartService;
 import com.shoes.webshoes.service.UserRegisterService;
 
 
@@ -38,6 +43,9 @@ import com.shoes.webshoes.service.UserRegisterService;
 public class JwtAuthenticationController extends BaseController {
     @Autowired
 	public UserRegisterService userRegisterService;
+    
+    @Autowired
+    public CartService cartService;
     
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<JwtResponse>> createAuthenticationToken(@RequestBody JwtRequest wrapper)
@@ -63,6 +71,16 @@ public class JwtAuthenticationController extends BaseController {
         String token = jwtTokenUtil.generateToken(userDetails);
         user.setAccessToken(token);
         userService.update(user);
+        
+        List<Cart> listCart = cartService.spGListCart(user.getId(), "",
+				1, new Pagination(0, 20)).getResult();
+        if(listCart != null && listCart.isEmpty()) {
+        	Cart cart = new Cart();
+        	cart.setUserId(user.getId());
+        	cart.setStatus(1);
+        	cartService.create(cart);
+        }
+        
         response.setData(new JwtResponse(token));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

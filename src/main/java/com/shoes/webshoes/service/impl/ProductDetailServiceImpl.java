@@ -48,4 +48,9 @@ public class ProductDetailServiceImpl implements ProductDetailService {
 			Pagination pagination) throws Exception {
 		return productDetailDao.spGListProductDetail(productId, colorId, sizeId, materialId, keySearch, status, pagination);
 	}
+
+	@Override
+	public List<ProductDetail> findByIds(List<Integer> ids) {
+		return productDetailDao.findByIds(ids);
+	}
 }
