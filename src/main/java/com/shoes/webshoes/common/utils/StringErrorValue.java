@@ -55,5 +55,8 @@ public class StringErrorValue {
 	public static final String PRODUCT_DETAIL_NOT_IN_CART = "sản phẩm này không nằm trong giỏ hàng hoặc không tồn tại";
 	public static final String PRODUCT_DETAIL_NOT_INSUFFICIENT_QUANTITY = "Số lượng sản phẩm trong kho không đáp ứng đủ số lượng,vui lòng chọn số lượng nhỏ hơn để mua hàng!";
 
+	public static final String VOUCHER_NOT_FOUND = "voucher không tồn tại!";
+	public static final String VOUCHER_IS_EXIST = "voucher đã tồn tại!";
+
 
 }
