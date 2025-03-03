@@ -62,5 +62,8 @@ public class StringErrorValue {
 	public static final String VOUCHER_APPLICATION_NOT_FOUND = "voucher apply không tồn tại!";
 	public static final String VOUCHER_APPLICATION_IS_EXIST = "voucher apply đã tồn tại!";
 
+	public static final String ORDER_NOT_FOUND = "đơn hàng không tồn tại!";
+	public static final String ORDER_IS_EXIST = "đơn hàng đã tồn tại!";
+
 
 }
