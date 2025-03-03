@@ -48,4 +48,9 @@ public class ProductServiceImpl implements ProductService {
 			Pagination pagination) throws Exception {
 		return productDao.spGListProduct(keySearch, status, pagination);
 	}
+
+    @Override
+    public List<Product> findByIds(List<Integer> ids) {
+        return productDao.findByIds(ids);
+    }
 }

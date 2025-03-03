@@ -54,4 +54,14 @@ public class Voucher extends BaseEntity{
 	private int usedCount;
 
 	private int status;
+
+	public boolean isCurrentDateInRange() {
+		Date currentDate = new Date();
+		return (startDate != null && endDate != null) 
+			   && (currentDate.compareTo(startDate) >= 0 && currentDate.compareTo(endDate) <= 0);
+	}
+
+	public boolean isNumberLimit() {
+		return usedCount >= usageLimit;
+	}
 }

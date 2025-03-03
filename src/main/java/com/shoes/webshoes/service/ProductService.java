@@ -17,4 +17,6 @@ public interface ProductService {
     StoreProcedureListResult<Product> spGListProduct(String keySearch,int status,Pagination pagination) throws Exception;
 
     Product findByName(String name);
+
+    List<Product> findByIds(List<Integer> ids);
 }

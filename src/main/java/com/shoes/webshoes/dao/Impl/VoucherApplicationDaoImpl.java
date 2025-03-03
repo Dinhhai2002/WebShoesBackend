@@ -1,6 +1,5 @@
 package com.shoes.webshoes.dao.Impl;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.ParameterMode;
@@ -17,42 +16,42 @@ import com.shoes.webshoes.common.enums.StoreProcedureStatusCodeEnum;
 import com.shoes.webshoes.common.exception.TechresHttpException;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.dao.AbstractDao;
-import com.shoes.webshoes.dao.ProductDao;
-import com.shoes.webshoes.entity.Product;
+import com.shoes.webshoes.dao.VoucherApplicationDao;
+import com.shoes.webshoes.entity.VoucherApplication;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 
-@Repository("ProductDao")
+@Repository("VoucherApplicationDao")
 @Transactional
-public class ProductDaoImpl extends AbstractDao<Integer, Product> implements ProductDao {
+public class VoucherApplicationDaoImpl extends AbstractDao<Integer, VoucherApplication> implements VoucherApplicationDao {
     @Override
-    public void create(Product product) {
-       this.getSession().save(product);
+    public void create(VoucherApplication voucherApplication) {
+       this.getSession().save(voucherApplication);
     }
 
     @Override
-    public Product findOne(int id) {
-       return this.getSession().find(Product.class,id);
+    public VoucherApplication findOne(int id) {
+       return this.getSession().find(VoucherApplication.class,id);
     }
 
     @Override
-    public void update(Product product) {
-       this.getSession().update(product);	
+    public void update(VoucherApplication voucherApplication) {
+       this.getSession().update(voucherApplication);	
     }
 
     @Override
-    public List<Product> getAll() {
+    public List<VoucherApplication> getAll() {
        CriteriaBuilder builder = this.getBuilder();
-		CriteriaQuery<Product> query = builder.createQuery(Product.class);
-		Root<Product> root = query.from(Product.class);
+		CriteriaQuery<VoucherApplication> query = builder.createQuery(VoucherApplication.class);
+		Root<VoucherApplication> root = query.from(VoucherApplication.class);
 
 		return this.getSession().createQuery(query).getResultList();
     }
 
     @Override
-    public Product findByName(String name) {
+    public VoucherApplication findByName(String name) {
         CriteriaBuilder builder = this.getBuilder();
-		CriteriaQuery<Product> query = builder.createQuery(Product.class);
-		Root<Product> root = query.from(Product.class);
+		CriteriaQuery<VoucherApplication> query = builder.createQuery(VoucherApplication.class);
+		Root<VoucherApplication> root = query.from(VoucherApplication.class);
 		query.where(builder.equal(root.get("name"), name));
 
 		return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
@@ -60,9 +59,13 @@ public class ProductDaoImpl extends AbstractDao<Integer, Product> implements Pro
 
     @SuppressWarnings("unchecked")
 	@Override
-	public StoreProcedureListResult<Product> spGListProduct(String keySearch, int status, Pagination pagination)
+	public StoreProcedureListResult<VoucherApplication> spGListVoucherApplication(int voucherId, int productId, int brandId, int categoryId, String keySearch,int status,Pagination pagination)
 			throws Exception {
-		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_product", Product.class)
+		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_voucher_application", VoucherApplication.class)
+				.registerStoredProcedureParameter("voucherId", Integer.class, ParameterMode.IN)
+				.registerStoredProcedureParameter("productId", Integer.class, ParameterMode.IN)
+				.registerStoredProcedureParameter("brandId", Integer.class, ParameterMode.IN)
+				.registerStoredProcedureParameter("categoryId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("keySearch", String.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("status", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("_limit", Integer.class, ParameterMode.IN)
@@ -72,6 +75,10 @@ public class ProductDaoImpl extends AbstractDao<Integer, Product> implements Pro
 				.registerStoredProcedureParameter("status_code", Integer.class, ParameterMode.OUT)
 				.registerStoredProcedureParameter("message_error", String.class, ParameterMode.OUT);
 
+		query.setParameter("voucherId", voucherId);
+		query.setParameter("productId", productId);
+		query.setParameter("brandId", brandId);
+		query.setParameter("categoryId", categoryId);
 		query.setParameter("keySearch", keySearch);
 		query.setParameter("status", status);
 		query.setParameter("_limit", pagination.getLimit());
@@ -89,20 +96,5 @@ public class ProductDaoImpl extends AbstractDao<Integer, Product> implements Pro
 		default:
 			throw new Exception(messageError);
 		}
-	}
-
-	@Override
-	public List<Product> findByIds(List<Integer> ids) {
-		if (ids == null || ids.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        CriteriaBuilder builder = this.getBuilder();
-        CriteriaQuery<Product> query = builder.createQuery(Product.class);
-        Root<Product> root = query.from(Product.class);
-
-        query.select(root).where(root.get("id").in(ids));
-
-        return this.getSession().createQuery(query).getResultList();
 	}
 }

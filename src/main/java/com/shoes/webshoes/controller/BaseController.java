@@ -3,6 +3,7 @@
 */
 package com.shoes.webshoes.controller;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,8 +28,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 
-
+import com.shoes.webshoes.common.enums.DiscountTypeEnum;
 import com.shoes.webshoes.entity.Users;
+import com.shoes.webshoes.entity.Voucher;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.security.JwtTokenUtil;
 import com.shoes.webshoes.service.UserService;
@@ -157,6 +159,16 @@ public class BaseController {
 		Date currentDate = new Date();
 		return currentDate.getTime() - (otpDate.getTime() + TIME_OTP_EXPIRED);
 
+	}
+
+	public static BigDecimal calculateTotalAmountApplyVoucher(BigDecimal amount, Voucher voucher) {
+		BigDecimal amountVoucher = BigDecimal.ZERO;
+		if(voucher.getDiscountType() == DiscountTypeEnum.PERCENT.getValue()) {
+			amountVoucher = amount.multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100)));
+		} else if(voucher.getDiscountType() == DiscountTypeEnum.CASH.getValue()) {
+			amountVoucher = voucher.getDiscountValue();
+		}
+		return amountVoucher;
 	}
 
 }
