@@ -35,25 +35,30 @@ import com.shoes.webshoes.common.enums.StatusOrderEnum;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.entity.Order;
+import com.shoes.webshoes.entity.OrderDetail;
 import com.shoes.webshoes.entity.Users;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDOrderRequest;
 import com.shoes.webshoes.request.ChangeStatusOrderRequest;
 import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
+import com.shoes.webshoes.response.OrderDetailResponse;
 import com.shoes.webshoes.response.OrderResponse;
 import com.shoes.webshoes.security.ConfigVnpay;
+import com.shoes.webshoes.service.OrderDetailService;
 import com.shoes.webshoes.service.OrderService;
-
 
 @RestController
 @RequestMapping("/api/v1/order")
 public class OrderController extends BaseController {
-    @Autowired
-    public OrderService orderService;
+	@Autowired
+	public OrderService orderService;
 
-    @GetMapping("")
-//	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@Autowired
+	public OrderDetailService orderDetailService;
+
+	@GetMapping("")
+	// @PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<OrderResponse>>> getAll(
 			@RequestParam(name = "user_id", required = false, defaultValue = "-1") int userId,
 			@RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
@@ -74,8 +79,8 @@ public class OrderController extends BaseController {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-    
-    @GetMapping("/{id}")
+
+	@GetMapping("/{id}")
 	public ResponseEntity<BaseResponse<OrderResponse>> findOneById(@PathVariable("id") int id) throws Exception {
 		BaseResponse<OrderResponse> response = new BaseResponse<>();
 		Order order = orderService.findOne(id);
@@ -85,14 +90,19 @@ public class OrderController extends BaseController {
 			response.setMessageError(StringErrorValue.ORDER_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-        response.setData(new OrderResponse(order));
+		List<OrderDetail> orderDetails = orderDetailService
+				.spGListOrderDetail(order.getId(), "", 1, new Pagination(0, 20)).getResult();
+		List<OrderDetailResponse> orderDetailsResponse = new OrderDetailResponse().mapToList(orderDetails);
+
+		response.setData(new OrderResponse(order, orderDetailsResponse));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping("/{id}/change-status")
 	@PreAuthorize("hasAnyAuthority('ADMIN')")
-	public ResponseEntity<BaseResponse<OrderResponse>> changeStatus(@PathVariable("id") int id, @Valid @RequestBody ChangeStatusOrderRequest wrapper) throws Exception {
+	public ResponseEntity<BaseResponse<OrderResponse>> changeStatus(@PathVariable("id") int id,
+			@Valid @RequestBody ChangeStatusOrderRequest wrapper) throws Exception {
 		BaseResponse<OrderResponse> response = new BaseResponse<>();
 		Order order = orderService.findOne(id);
 
@@ -105,7 +115,7 @@ public class OrderController extends BaseController {
 		order.setStatus(wrapper.getStatus());
 
 		orderService.update(order);
-        response.setData(new OrderResponse(order));
+		response.setData(new OrderResponse(order));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -115,7 +125,7 @@ public class OrderController extends BaseController {
 			@Valid @RequestBody CRUDOrderRequest wrapper) throws Exception {
 
 		BaseResponse response = new BaseResponse<>();
-		
+
 		Users users = this.getUser();
 
 		String vnp_TxnRef = ConfigVnpay.getRandomNumber(8);
@@ -176,16 +186,16 @@ public class OrderController extends BaseController {
 		queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
 		String paymentUrl = applicationProperties.getVnpPayUrl() + "?" + queryUrl;
 
-//		Order order = new Order();
-//		order.setUserId(users.getId());
-//		order.setPrice(wrapper.getPrice());
-//		order.setDiscountAmount(wrapper.getDiscountAmount());
-//		order.setTotalPrice(wrapper.getTotalPrice());
-//		order.setPaymentMethod(wrapper.getPaymentMethod());
-//		order.setPaymentStatus(PaymentStatusEnum.PENDING.getValue());
-//		order.setStatus(StatusOrderEnum.PENDING.getValue());
-//
-//		orderService.create(order);
+		// Order order = new Order();
+		// order.setUserId(users.getId());
+		// order.setPrice(wrapper.getPrice());
+		// order.setDiscountAmount(wrapper.getDiscountAmount());
+		// order.setTotalPrice(wrapper.getTotalPrice());
+		// order.setPaymentMethod(wrapper.getPaymentMethod());
+		// order.setPaymentStatus(PaymentStatusEnum.PENDING.getValue());
+		// order.setStatus(StatusOrderEnum.PENDING.getValue());
+		//
+		// orderService.create(order);
 		response.setData(paymentUrl);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -204,10 +214,10 @@ public class OrderController extends BaseController {
 		}
 
 		// if (!order.getName().equals(wrapper.getName())
-		// 		&& orderService.findByName(wrapper.getName()) != null) {
-		// 	response.setStatus(HttpStatus.BAD_REQUEST);
-		// 	response.setMessageError(StringErrorValue.ORDER_IS_EXIST);
-		// 	return new ResponseEntity<>(response, HttpStatus.OK);
+		// && orderService.findByName(wrapper.getName()) != null) {
+		// response.setStatus(HttpStatus.BAD_REQUEST);
+		// response.setMessageError(StringErrorValue.ORDER_IS_EXIST);
+		// return new ResponseEntity<>(response, HttpStatus.OK);
 
 		// }
 		// order.setName(wrapper.getName());

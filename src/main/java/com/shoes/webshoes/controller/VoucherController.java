@@ -205,7 +205,7 @@ public class VoucherController extends BaseController {
 		Cart cart = cartService.spGListCart(users.getId(), "", -1, new Pagination(0, 20)).getResult().stream()
 				.findFirst().orElse(null);
 		List<CartDetail> listCartDetail = cartDetailService
-				.spGListCartDetail(cart.getId(), "", 1, new Pagination(0, 20))
+				.spGListCartDetail(cart.getId(),-1, "", 1, new Pagination(0, 20))
 				.getResult();
 		Map<Integer, CartDetail> cartDetailMap = new HashMap<>();
 		for (CartDetail cartDetail : listCartDetail) {

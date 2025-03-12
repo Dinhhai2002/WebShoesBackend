@@ -1,5 +1,11 @@
 package com.shoes.webshoes.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,20 +29,20 @@ import com.shoes.webshoes.request.CRUDCartDetailRequest;
 import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.CartDetailResponse;
+import com.shoes.webshoes.response.ProductDetailResponse;
 import com.shoes.webshoes.service.CartDetailService;
 import com.shoes.webshoes.service.ProductDetailService;
 
-
 @RestController
 @RequestMapping("/api/v1/cart-detail")
-public class CartDetailController  {
-    @Autowired
-    public CartDetailService cartDetailService;
-    
-    @Autowired
-    public ProductDetailService productDetailService;
+public class CartDetailController {
+	@Autowired
+	public CartDetailService cartDetailService;
 
-    @GetMapping("")
+	@Autowired
+	public ProductDetailService productDetailService;
+
+	@GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<CartDetailResponse>>> getAll(
 			@RequestParam(name = "cart_id", required = false, defaultValue = "-1") int cartId,
@@ -46,20 +52,32 @@ public class CartDetailController  {
 			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
 		BaseResponse<BaseListDataResponse<CartDetailResponse>> response = new BaseResponse<>();
 		Pagination pagination = new Pagination(page, limit);
-		StoreProcedureListResult<CartDetail> listCartDetail = cartDetailService.spGListCartDetail(cartId, keySearch,
+		StoreProcedureListResult<CartDetail> listCartDetail = cartDetailService.spGListCartDetail(cartId, -1, keySearch,
 				status, pagination);
+		Set<Integer> listProductDetailIds = listCartDetail.getResult().stream().map(item -> item.getProductDetailId())
+				.collect(Collectors.toSet());
+
+		List<ProductDetail> productDetails = productDetailService.findByIds(new ArrayList<>(listProductDetailIds));
+
+		Map<Integer, ProductDetailResponse> productDetailResponseMap = productDetails.stream()
+				.collect(Collectors.toMap(ProductDetail::getId, ProductDetailResponse::new));
 
 		BaseListDataResponse<CartDetailResponse> listData = new BaseListDataResponse<>();
 
-		listData.setList(new CartDetailResponse().mapToList(listCartDetail.getResult()));
+		// Sử dụng map để ánh xạ ProductDetailResponse vào CartDetailResponse
+		listData.setList(listCartDetail.getResult().stream().map(cartDetail -> {
+			ProductDetailResponse productDetailResponse = productDetailResponseMap.get(cartDetail.getProductDetailId());
+			return new CartDetailResponse(cartDetail, productDetailResponse);
+		}).collect(Collectors.toList()));
+
 		listData.setTotalRecord(listCartDetail.getTotalRecord());
 
 		response.setData(listData);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-    
-    @GetMapping("/{id}")
+
+	@GetMapping("/{id}")
 	public ResponseEntity<BaseResponse<CartDetailResponse>> findOneById(@PathVariable("id") int id) throws Exception {
 		BaseResponse<CartDetailResponse> response = new BaseResponse<>();
 		CartDetail cartDetail = cartDetailService.findOne(id);
@@ -69,42 +87,45 @@ public class CartDetailController  {
 			response.setMessageError(StringErrorValue.CART_DETAIL_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-        response.setData(new CartDetailResponse(cartDetail));
+		response.setData(new CartDetailResponse(cartDetail));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	// @PostMapping("/{id}/change-status")
 	// @PreAuthorize("hasAnyAuthority('ADMIN')")
-	// public ResponseEntity<BaseResponse<CartDetailResponse>> changeStatus(@PathVariable("id") int id) throws Exception {
-	// 	BaseResponse<CartDetailResponse> response = new BaseResponse<>();
-	// 	CartDetail cartDetail = cartDetailService.findOne(id);
+	// public ResponseEntity<BaseResponse<CartDetailResponse>>
+	// changeStatus(@PathVariable("id") int id) throws Exception {
+	// BaseResponse<CartDetailResponse> response = new BaseResponse<>();
+	// CartDetail cartDetail = cartDetailService.findOne(id);
 
-	// 	if (cartDetail == null) {
-	// 		response.setStatus(HttpStatus.BAD_REQUEST);
-	// 		response.setMessageError(StringErrorValue.CART_DETAIL_NOT_FOUND);
-	// 		return new ResponseEntity<>(response, HttpStatus.OK);
-	// 	}
+	// if (cartDetail == null) {
+	// response.setStatus(HttpStatus.BAD_REQUEST);
+	// response.setMessageError(StringErrorValue.CART_DETAIL_NOT_FOUND);
+	// return new ResponseEntity<>(response, HttpStatus.OK);
+	// }
 
-	// 	cartDetail.setStatus(cartDetail.getStatus() == 1 ? 0 : 1);
+	// cartDetail.setStatus(cartDetail.getStatus() == 1 ? 0 : 1);
 
-	// 	cartDetailService.update(cartDetail);
-    //     response.setData(new CartDetailResponse(cartDetail));
+	// cartDetailService.update(cartDetail);
+	// response.setData(new CartDetailResponse(cartDetail));
 
-	// 	return new ResponseEntity<>(response, HttpStatus.OK);
+	// return new ResponseEntity<>(response, HttpStatus.OK);
 	// }
 
 	@PostMapping("/create")
-	public ResponseEntity<BaseResponse<CartDetailResponse>> create(
-			@Valid @RequestBody CRUDCartDetailRequest wrapper) throws Exception {
+	public ResponseEntity<BaseResponse<CartDetailResponse>> create(@Valid @RequestBody CRUDCartDetailRequest wrapper)
+			throws Exception {
 
 		BaseResponse<CartDetailResponse> response = new BaseResponse<>();
-		// CartDetail cartDetailCheck = cartDetailService.spGListCartDetail(wrapper.getCartId(), "", 0, new Pagination(0, 20))
-		// 												.getResult().stream().findFirst().orElse(null);
+		// CartDetail cartDetailCheck =
+		// cartDetailService.spGListCartDetail(wrapper.getCartId(), "", 0, new
+		// Pagination(0, 20))
+		// .getResult().stream().findFirst().orElse(null);
 		// if (cartDetailCheck != null) {
-		// 	response.setStatus(HttpStatus.BAD_REQUEST);
-		// 	response.setMessageError(StringErrorValue.CART_DETAIL_IS_EXIST);
-		// 	return new ResponseEntity<>(response, HttpStatus.OK);
+		// response.setStatus(HttpStatus.BAD_REQUEST);
+		// response.setMessageError(StringErrorValue.CART_DETAIL_IS_EXIST);
+		// return new ResponseEntity<>(response, HttpStatus.OK);
 		// }
 
 		CartDetail cartDetail = new CartDetail();
@@ -129,15 +150,22 @@ public class CartDetailController  {
 			response.setMessageError(StringErrorValue.CART_DETAIL_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-		
+
+		if (wrapper.getQuantity() == 0) {
+			cartDetailService.delete(id);
+			response.setStatus(HttpStatus.OK);
+			response.setMessageError("Cart detail deleted successfully.");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
 		ProductDetail productDetail = productDetailService.findOne(cartDetail.getProductDetailId());
-		if(productDetail == null) {
+		if (productDetail == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_NOT_IN_CART);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-		
-		if(wrapper.getQuantity() > productDetail.getStock()) {
+
+		if (wrapper.getQuantity() > productDetail.getStock()) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_NOT_INSUFFICIENT_QUANTITY);
 			return new ResponseEntity<>(response, HttpStatus.OK);

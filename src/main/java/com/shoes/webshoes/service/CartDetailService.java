@@ -6,15 +6,18 @@ import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.entity.CartDetail;
 
 public interface CartDetailService {
-    void create(CartDetail cartDetail);
+	void create(CartDetail cartDetail);
 
-    CartDetail findOne(int id);
+	CartDetail findOne(int id);
 
-    void update(CartDetail cartDetail);
+	void update(CartDetail cartDetail);
 
-    List<CartDetail> getAll();
+	List<CartDetail> getAll();
 
-    StoreProcedureListResult<CartDetail> spGListCartDetail(int cartId, String keySearch,int status,Pagination pagination) throws Exception;
+	StoreProcedureListResult<CartDetail> spGListCartDetail(int cartId, int productDetailId, String keySearch,
+			int status, Pagination pagination) throws Exception;
 
-    CartDetail findByName(String name);
+	CartDetail findByName(String name);
+	
+	void delete(int id);
 }

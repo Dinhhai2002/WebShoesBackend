@@ -15,37 +15,42 @@ import com.shoes.webshoes.service.CartDetailService;
 @Service("CartDetailService")
 @Transactional(rollbackFor = Error.class)
 public class CartDetailServiceImpl implements CartDetailService {
-    @Autowired
-    private CartDetailDao cartDetailDao;
+	@Autowired
+	private CartDetailDao cartDetailDao;
 
-    @Override
-    public void create(CartDetail cartDetail) {
-        cartDetailDao.create(cartDetail);
-    }
+	@Override
+	public void create(CartDetail cartDetail) {
+		cartDetailDao.create(cartDetail);
+	}
 
-    @Override
-    public CartDetail findOne(int id) {
-        return cartDetailDao.findOne(id);
-    }
+	@Override
+	public CartDetail findOne(int id) {
+		return cartDetailDao.findOne(id);
+	}
 
-    @Override
-    public void update(CartDetail cartDetail) {
-        cartDetailDao.update(cartDetail);
-    }
+	@Override
+	public void update(CartDetail cartDetail) {
+		cartDetailDao.update(cartDetail);
+	}
 
-    @Override
-    public List<CartDetail> getAll() {
-        return cartDetailDao.getAll();
-    }
+	@Override
+	public List<CartDetail> getAll() {
+		return cartDetailDao.getAll();
+	}
 
-    @Override
-    public CartDetail findByName(String name) {
-        return cartDetailDao.findByName(name);
-    }
+	@Override
+	public CartDetail findByName(String name) {
+		return cartDetailDao.findByName(name);
+	}
 
-    @Override
-	public StoreProcedureListResult<CartDetail> spGListCartDetail(int cartId, String keySearch, int status,
-			Pagination pagination) throws Exception {
-		return cartDetailDao.spGListCartDetail(cartId, keySearch, status, pagination);
+	@Override
+	public StoreProcedureListResult<CartDetail> spGListCartDetail(int cartId, int productDetailId, String keySearch,
+			int status, Pagination pagination) throws Exception {
+		return cartDetailDao.spGListCartDetail(cartId, productDetailId, keySearch, status, pagination);
+	}
+	
+	@Override
+	public void delete(int id) {
+	    cartDetailDao.delete(id);
 	}
 }

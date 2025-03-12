@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.common.utils.Utils;
+import com.shoes.webshoes.entity.Cart;
 import com.shoes.webshoes.entity.Image;
 import com.shoes.webshoes.entity.Users;
 import com.shoes.webshoes.model.StoreProcedureListResult;
@@ -27,6 +28,7 @@ import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.ImageResponse;
 import com.shoes.webshoes.response.UserResponse;
+import com.shoes.webshoes.service.CartService;
 import com.shoes.webshoes.service.IFirebaseImageService;
 import com.shoes.webshoes.service.ImageService;
 
@@ -38,7 +40,10 @@ public class UserController extends BaseController {
 	public IFirebaseImageService iFirebaseImageService;
 
 	@Autowired
-	public ImageService imageService;;
+	public ImageService imageService;
+
+	@Autowired
+	CartService cartService;
 
 	@GetMapping("")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<UserResponse>>> getAllUser(
@@ -120,9 +125,11 @@ public class UserController extends BaseController {
 
 		BaseResponse<UserResponse> response = new BaseResponse<>();
 		Users user = this.getUser();
+		StoreProcedureListResult<Cart> listCart = cartService.spGListCart(this.getUser().getId(), "", 1,
+				new Pagination(0, 20));
+		Cart cart = listCart.getResult().stream().findFirst().orElse(null);
 
-
-		response.setData(new UserResponse(user));
+		response.setData(new UserResponse(user, cart != null ? cart.getId() : 0));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -202,7 +209,7 @@ public class UserController extends BaseController {
 			response.setMessageError(StringErrorValue.USER_NOT_LOCK);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
-		}	
+		}
 
 		user.setIsActive(user.getIsActive() == 1 ? 0 : 1);
 

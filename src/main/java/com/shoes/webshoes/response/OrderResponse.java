@@ -35,6 +35,11 @@ public class OrderResponse {
 
 	private int status;
 
+	@JsonProperty("order_detail")
+	private List<OrderDetailResponse> orderDetailResponse;
+
+
+
 	public OrderResponse() {
 
 	}
@@ -49,6 +54,19 @@ public class OrderResponse {
 		this.paymentMethod = entity.getPaymentMethod();
 		this.paymentStatus = entity.getPaymentStatus();
 		this.status = entity.getStatus();
+	}
+
+	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse) {
+		this.id = entity.getId();
+		this.userId = entity.getUserId();
+		this.voucherId = entity.getVoucherId();
+		this.price = entity.getPrice();
+		this.discountAmount = entity.getDiscountAmount();
+		this.totalPrice = entity.getTotalPrice();
+		this.paymentMethod = entity.getPaymentMethod();
+		this.paymentStatus = entity.getPaymentStatus();
+		this.status = entity.getStatus();
+		this.orderDetailResponse = orderDetailResponse;
 	}
 
 	public List<OrderResponse> mapToList(List<Order> entities) {

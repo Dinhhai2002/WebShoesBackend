@@ -60,6 +60,9 @@ public class UserResponse {
 
 	@JsonProperty("point_promotion")
 	private long point;
+	
+	@JsonProperty("cart_id")
+	private int cartId;
 
 	public UserResponse() {
 
@@ -84,6 +87,28 @@ public class UserResponse {
 		this.isActive = entity.getIsActive();
 		this.role = entity.getRole();
 		this.isGoogle = entity.getIsGoogle();
+	}
+	
+	public UserResponse(Users entity,int cartId) {
+		this.id = entity.getId();
+		this.userName = entity.getUserName();
+		this.fullName = entity.getFullName();
+		this.gender = entity.getGender();
+		this.birthday = entity.getBirthday() != null ? Utils.getDateStringSupplier(entity.getBirthday()) : "";
+		this.email = entity.getEmail();
+		this.avatarId = entity.getAvatarId();
+		this.avatarUrl = entity.getAvatarUrl();
+		this.wardId = entity.getWardId();
+		this.cityId = entity.getCityId();
+		this.districtId = entity.getDistrictId();
+		this.phone = entity.getPhone();
+		this.fullAddress = entity.getFullAddress();
+		this.accessToken = entity.getAccessToken();
+		this.isLogin = entity.getIsLogin();
+		this.isActive = entity.getIsActive();
+		this.role = entity.getRole();
+		this.isGoogle = entity.getIsGoogle();
+		this.cartId = cartId;
 	}
 
 

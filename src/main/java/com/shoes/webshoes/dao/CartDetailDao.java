@@ -14,7 +14,9 @@ public interface CartDetailDao {
 
     List<CartDetail> getAll();
 
-    StoreProcedureListResult<CartDetail> spGListCartDetail(int cartId, String keySearch,int status,Pagination pagination) throws Exception;
+    StoreProcedureListResult<CartDetail> spGListCartDetail(int cartId,int productDetailId, String keySearch,int status,Pagination pagination) throws Exception;
 
     CartDetail findByName(String name);
+    
+    void delete(int id);
 }
