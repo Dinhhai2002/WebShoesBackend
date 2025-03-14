@@ -30,6 +30,15 @@ public enum PaymentStatusEnum {
 			return PENDING;
 		}
 	}
+
+    public static boolean isValidStatus(int status) {
+        for (PaymentStatusEnum paymentStatus : PaymentStatusEnum.values()) {
+            if (paymentStatus.getValue() == status) {
+                return true;
+            }
+        }
+        return false;
+    }
     // Chưa thanh toán – Đơn hàng đã được tạo nhưng chưa thực hiện thanh toán.
     // Đang chờ thanh toán – Đã chọn phương thức thanh toán online nhưng chưa hoàn tất giao dịch.
     // Đã thanh toán – Thanh toán đã được xác nhận thành công.

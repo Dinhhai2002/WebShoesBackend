@@ -34,6 +34,9 @@ public class OrderResponse {
 	private int paymentStatus;
 
 	private int status;
+	
+	@JsonProperty("created_at")
+	private String createdAt;
 
 	@JsonProperty("order_detail")
 	private List<OrderDetailResponse> orderDetailResponse;
@@ -54,6 +57,7 @@ public class OrderResponse {
 		this.paymentMethod = entity.getPaymentMethod();
 		this.paymentStatus = entity.getPaymentStatus();
 		this.status = entity.getStatus();
+		this.createdAt = entity.getDatetimeFormatVN(entity.getCreatedAt());
 	}
 
 	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse) {
@@ -66,6 +70,7 @@ public class OrderResponse {
 		this.paymentMethod = entity.getPaymentMethod();
 		this.paymentStatus = entity.getPaymentStatus();
 		this.status = entity.getStatus();
+		this.createdAt = entity.getDatetimeFormatVN(entity.getCreatedAt());
 		this.orderDetailResponse = orderDetailResponse;
 	}
 

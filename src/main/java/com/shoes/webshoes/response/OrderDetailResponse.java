@@ -22,6 +22,9 @@ public class OrderDetailResponse {
 	private int quantity;
 
 	private BigDecimal price;
+	
+	@JsonProperty("total_price")
+	private BigDecimal totalPrice;
 
 	private int status;
 

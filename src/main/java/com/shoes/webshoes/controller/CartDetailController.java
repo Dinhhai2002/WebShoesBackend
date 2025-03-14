@@ -127,14 +127,24 @@ public class CartDetailController {
 		// response.setMessageError(StringErrorValue.CART_DETAIL_IS_EXIST);
 		// return new ResponseEntity<>(response, HttpStatus.OK);
 		// }
-
+		ProductDetail productDetails = productDetailService.findOne(wrapper.getProductDetailId());
+		if (productDetails == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+		if (wrapper.getQuantity() > productDetails.getStock()) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_NOT_INSUFFICIENT_QUANTITY);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 		CartDetail cartDetail = new CartDetail();
 		cartDetail.setCartId(wrapper.getCartId());
 		cartDetail.setProductDetailId(wrapper.getProductDetailId());
 		cartDetail.setQuantity(wrapper.getQuantity());
 
 		cartDetailService.create(cartDetail);
-		response.setData(new CartDetailResponse(cartDetail));
+		response.setData(new CartDetailResponse(cartDetail, new ProductDetailResponse(productDetails)));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

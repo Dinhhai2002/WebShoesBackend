@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @Entity
-@Table(name = "orderDetail")
+@Table(name = "order_details")
 public class OrderDetail extends BaseEntity{
     /**
 	 * 
@@ -35,6 +35,9 @@ public class OrderDetail extends BaseEntity{
 	private int quantity;
 
 	private BigDecimal price;
+	
+	@Column(name = "total_price")
+	private BigDecimal totalPrice;
 
 	private int status;
 }
