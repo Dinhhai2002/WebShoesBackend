@@ -29,7 +29,7 @@ import com.shoes.webshoes.service.BrandService;
 @RequestMapping("/api/v1/brand")
 public class BrandController  {
     @Autowired
-    public BrandService brandService;
+    private BrandService brandService;
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -89,6 +89,7 @@ public class BrandController  {
 	}
 
 	@PostMapping("/create")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BrandResponse>> create(
 			@Valid @RequestBody CRUDBrandRequest wrapper) throws Exception {
 
@@ -97,12 +98,13 @@ public class BrandController  {
 
 		if (brandCheck != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+			response.setMessageError(StringErrorValue.BRAND_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 		Brand brand = new Brand();
 		brand.setName(wrapper.getName());
+		brand.setImageUrl(wrapper.getImageUrl());
 		brand.setStatus(1);
 
 		brandService.create(brand);
@@ -111,6 +113,7 @@ public class BrandController  {
 	}
 
 	@PostMapping("/{id}/update")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BrandResponse>> update(@PathVariable("id") int id,
 			@Valid @RequestBody CRUDBrandRequest wrapper) throws Exception {
 
@@ -131,6 +134,7 @@ public class BrandController  {
 
 		}
 		brand.setName(wrapper.getName());
+		brand.setImageUrl(wrapper.getImageUrl());
 		brandService.update(brand);
 
 		response.setData(new BrandResponse(brand));

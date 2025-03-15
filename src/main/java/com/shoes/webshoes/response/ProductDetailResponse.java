@@ -33,6 +33,14 @@ public class ProductDetailResponse {
 
 	private String material;
 
+	@JsonProperty("brand_id")
+	private int brandId;
+	private String brand;
+
+	@JsonProperty("category_id")
+	private int categoryId;
+	private String category;
+
 	private int stock;
 
 	private BigDecimal price;
@@ -56,6 +64,10 @@ public class ProductDetailResponse {
 		this.sizeId = entity.getSizeId();
 		this.materialId = entity.getMaterialId();
 		this.material = entity.getMaterial();
+		this.brandId = entity.getBrandId();
+		this.brand = entity.getBrand();
+		this.categoryId = entity.getCategoryId();
+		this.category = entity.getCategory();
 		this.stock = entity.getStock();
 		this.price = entity.getPrice();
 		this.imageUrl = entity.getImageUrl();

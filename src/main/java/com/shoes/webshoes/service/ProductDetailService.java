@@ -14,7 +14,17 @@ public interface ProductDetailService {
 
     List<ProductDetail> getAll();
 
-    StoreProcedureListResult<ProductDetail> spGListProductDetail(int productId, int colorId, int sizeId, int materialId, String keySearch,int status,Pagination pagination) throws Exception;
+    StoreProcedureListResult<ProductDetail> spGListProductDetail(
+        int productId, 
+        int colorId, 
+        int sizeId, 
+        int materialId,
+        int brandId,
+        int categoryId, 
+        String keySearch,
+        int status,
+        Pagination pagination
+    ) throws Exception;
 
     ProductDetail findByName(String name);
     

@@ -48,6 +48,7 @@ import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.OrderDetailResponse;
 import com.shoes.webshoes.response.OrderResponse;
+import com.shoes.webshoes.response.ProductDetailResponse;
 import com.shoes.webshoes.security.ConfigVnpay;
 import com.shoes.webshoes.service.CartService;
 import com.shoes.webshoes.service.CartDetailService;
@@ -106,12 +107,34 @@ public class OrderController extends BaseController {
 			response.setMessageError(StringErrorValue.ORDER_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+
+		// Lấy danh sách OrderDetail theo orderId
 		List<OrderDetail> orderDetails = orderDetailService
-				.spGListOrderDetail(order.getId(), "", 1, new Pagination(0, 20)).getResult();
-		List<OrderDetailResponse> orderDetailsResponse = new OrderDetailResponse().mapToList(orderDetails);
+				.spGListOrderDetail(order.getId(), "", 1, new Pagination(0, 20))
+				.getResult();
+
+		// Lấy danh sách productDetailIds
+		List<Integer> productDetailIds = orderDetails.stream()
+				.map(OrderDetail::getProductDetailId)
+				.collect(Collectors.toList());
+
+		// Lấy thông tin ProductDetail
+		List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
+		Map<Integer, ProductDetailResponse> productDetailMap = productDetails.stream()
+				.collect(Collectors.toMap(
+						ProductDetail::getId,
+						pd -> new ProductDetailResponse(pd)
+				));
+
+		// Tạo response với ProductDetail được map
+		List<OrderDetailResponse> orderDetailsResponse = orderDetails.stream()
+				.map(orderDetail -> {
+					ProductDetailResponse productDetailResponse = productDetailMap.get(orderDetail.getProductDetailId());
+					return new OrderDetailResponse(orderDetail, productDetailResponse);
+				})
+				.collect(Collectors.toList());
 
 		response.setData(new OrderResponse(order, orderDetailsResponse));
-
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

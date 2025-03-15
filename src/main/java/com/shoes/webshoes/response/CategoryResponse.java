@@ -17,6 +17,9 @@ public class CategoryResponse {
     @JsonProperty("parent_id")
 	private int parentId;
 
+    @JsonProperty("image_url")
+	private String imageUrl;
+
 	private int status;
 
 	public CategoryResponse() {
@@ -27,6 +30,7 @@ public class CategoryResponse {
 		this.id = entity.getId();
 		this.name = entity.getName();
 		this.parentId = entity.getParentId();
+		this.imageUrl = entity.getImageUrl();
 		this.status = entity.getStatus();
 	}
 

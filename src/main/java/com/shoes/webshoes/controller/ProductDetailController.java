@@ -32,6 +32,10 @@ import com.shoes.webshoes.service.ProductDetailService;
 import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.SizeService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
+import com.shoes.webshoes.service.BrandService;
+import com.shoes.webshoes.service.CategoryService;
+import com.shoes.webshoes.entity.Brand;
+import com.shoes.webshoes.entity.Category;
 
 
 @RestController
@@ -55,6 +59,12 @@ public class ProductDetailController  {
 	@Autowired
 	public MaterialsService materialsService;
 
+	@Autowired
+	private BrandService brandService;
+
+	@Autowired
+	private CategoryService categoryService;
+
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<ProductDetailResponse>>> getAll(
@@ -62,22 +72,22 @@ public class ProductDetailController  {
 			@RequestParam(name = "color_id", required = false, defaultValue = "-1") int colorId,
 			@RequestParam(name = "size_id", required = false, defaultValue = "-1") int sizeId,
 			@RequestParam(name = "material_id", required = false, defaultValue = "-1") int materialId,
+			@RequestParam(name = "brand_id", required = false, defaultValue = "-1") int brandId,
+			@RequestParam(name = "category_id", required = false, defaultValue = "-1") int categoryId,
 			@RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
 			@RequestParam(name = "status", required = false, defaultValue = "-1") int status,
 			@RequestParam(name = "page", required = false, defaultValue = "1") int page,
 			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
 		BaseResponse<BaseListDataResponse<ProductDetailResponse>> response = new BaseResponse<>();
 		Pagination pagination = new Pagination(page, limit);
-		StoreProcedureListResult<ProductDetail> listProductDetail = productDetailService.spGListProductDetail(productId, colorId, sizeId, materialId, keySearch,
-				status, pagination);
+		StoreProcedureListResult<ProductDetail> listProductDetail = productDetailService.spGListProductDetail(
+			productId, colorId, sizeId, materialId, brandId, categoryId, keySearch, status, pagination);
 
 		BaseListDataResponse<ProductDetailResponse> listData = new BaseListDataResponse<>();
-
 		listData.setList(new ProductDetailResponse().mapToList(listProductDetail.getResult()));
 		listData.setTotalRecord(listProductDetail.getTotalRecord());
 
 		response.setData(listData);
-
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
     
@@ -161,6 +171,20 @@ public class ProductDetailController  {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
+		Brand brand = brandService.findOne(wrapper.getBrandId());
+		if (brand == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		Category category = categoryService.findOne(wrapper.getCategoryId());
+		if (category == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
 		ProductDetail productDetail = new ProductDetail();
 		productDetail.setName(wrapper.getName());
 		productDetail.setProductId(wrapper.getProductId());
@@ -173,6 +197,10 @@ public class ProductDetailController  {
 		productDetail.setPrice(wrapper.getPrice());
 		productDetail.setStock(wrapper.getStock());
 		productDetail.setStatus(1);
+		productDetail.setBrandId(brand.getId());
+		productDetail.setBrand(brand.getName());
+		productDetail.setCategoryId(category.getId());
+		productDetail.setCategory(category.getName());
 
 		productDetailService.create(productDetail);
 		response.setData(new ProductDetailResponse(productDetail));
@@ -198,6 +226,29 @@ public class ProductDetailController  {
 			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+
+		if (wrapper.getBrandId() > 0) {
+			Brand brand = brandService.findOne(wrapper.getBrandId());
+			if (brand == null) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+			productDetail.setBrandId(brand.getId());
+			productDetail.setBrand(brand.getName());
+		}
+
+		if (wrapper.getCategoryId() > 0) {
+			Category category = categoryService.findOne(wrapper.getCategoryId());
+			if (category == null) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+			productDetail.setCategoryId(category.getId());
+			productDetail.setCategory(category.getName());
+		}
+
 		productDetail.setName(wrapper.getName());
 		productDetail.setPrice(wrapper.getPrice());
 		productDetail.setStock(wrapper.getStock());

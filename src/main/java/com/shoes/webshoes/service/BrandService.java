@@ -14,7 +14,11 @@ public interface BrandService {
 
     List<Brand> getAll();
 
-    StoreProcedureListResult<Brand> spGListBrand(String keySearch,int status,Pagination pagination) throws Exception;
+    StoreProcedureListResult<Brand> spGListBrand(
+        String keySearch,
+        int status,
+        Pagination pagination
+    ) throws Exception;
 
     Brand findByName(String name);
 }

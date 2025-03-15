@@ -23,13 +23,22 @@ import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.OrderDetailResponse;
 import com.shoes.webshoes.service.OrderDetailService;
+import com.shoes.webshoes.service.ProductDetailService;
+import com.shoes.webshoes.entity.ProductDetail;
+import com.shoes.webshoes.response.ProductDetailResponse;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/order-detail")
 public class OrderDetailController  {
     @Autowired
     public OrderDetailService orderDetailService;
+
+    @Autowired
+    private ProductDetailService productDetailService;
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -64,6 +73,7 @@ public class OrderDetailController  {
 			response.setMessageError(StringErrorValue.ORDER_DETAIL_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+		
         response.setData(new OrderDetailResponse(orderDetail));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -135,6 +145,44 @@ public class OrderDetailController  {
 		orderDetailService.update(orderDetail);
 
 		response.setData(new OrderDetailResponse(orderDetail));
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping("/by-order/{orderId}")
+	public ResponseEntity<BaseResponse<BaseListDataResponse<OrderDetailResponse>>> getByOrderId(
+			@PathVariable("orderId") int orderId) throws Exception {
+		BaseResponse<BaseListDataResponse<OrderDetailResponse>> response = new BaseResponse<>();
+		
+		// Lấy danh sách OrderDetail theo orderId
+		StoreProcedureListResult<OrderDetail> listOrderDetail = orderDetailService.spGListOrderDetail(
+			orderId, "", 1, new Pagination(0, 100));
+
+		// Lấy danh sách productDetailIds
+		List<Integer> productDetailIds = listOrderDetail.getResult().stream()
+			.map(OrderDetail::getProductDetailId)
+			.collect(Collectors.toList());
+
+		// Lấy thông tin ProductDetail
+		List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
+		Map<Integer, ProductDetailResponse> productDetailMap = productDetails.stream()
+			.collect(Collectors.toMap(
+				ProductDetail::getId,
+				pd -> new ProductDetailResponse(pd)
+			));
+
+		// Tạo response với ProductDetail được map
+		BaseListDataResponse<OrderDetailResponse> listData = new BaseListDataResponse<>();
+		List<OrderDetailResponse> orderDetailResponses = listOrderDetail.getResult().stream()
+			.map(orderDetail -> {
+				ProductDetailResponse productDetailResponse = productDetailMap.get(orderDetail.getProductDetailId());
+				return new OrderDetailResponse(orderDetail, productDetailResponse);
+			})
+			.collect(Collectors.toList());
+
+		listData.setList(orderDetailResponses);
+		listData.setTotalRecord(listOrderDetail.getTotalRecord());
+
+		response.setData(listData);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

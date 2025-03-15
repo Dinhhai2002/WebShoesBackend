@@ -61,16 +61,7 @@ public class OrderResponse {
 	}
 
 	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse) {
-		this.id = entity.getId();
-		this.userId = entity.getUserId();
-		this.voucherId = entity.getVoucherId();
-		this.price = entity.getPrice();
-		this.discountAmount = entity.getDiscountAmount();
-		this.totalPrice = entity.getTotalPrice();
-		this.paymentMethod = entity.getPaymentMethod();
-		this.paymentStatus = entity.getPaymentStatus();
-		this.status = entity.getStatus();
-		this.createdAt = entity.getDatetimeFormatVN(entity.getCreatedAt());
+		this(entity);
 		this.orderDetailResponse = orderDetailResponse;
 	}
 

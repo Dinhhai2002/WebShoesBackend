@@ -44,13 +44,24 @@ public class ProductDetailServiceImpl implements ProductDetailService {
     }
 
     @Override
-	public StoreProcedureListResult<ProductDetail> spGListProductDetail(int productId, int colorId, int sizeId, int materialId, String keySearch, int status,
-			Pagination pagination) throws Exception {
-		return productDetailDao.spGListProductDetail(productId, colorId, sizeId, materialId, keySearch, status, pagination);
-	}
+    public StoreProcedureListResult<ProductDetail> spGListProductDetail(
+            int productId, 
+            int colorId, 
+            int sizeId, 
+            int materialId,
+            int brandId,
+            int categoryId, 
+            String keySearch,
+            int status,
+            Pagination pagination) throws Exception {
+        return productDetailDao.spGListProductDetail(
+            productId, colorId, sizeId, materialId, 
+            brandId, categoryId, keySearch, status, pagination
+        );
+    }
 
-	@Override
-	public List<ProductDetail> findByIds(List<Integer> ids) {
-		return productDetailDao.findByIds(ids);
-	}
+    @Override
+    public List<ProductDetail> findByIds(List<Integer> ids) {
+        return productDetailDao.findByIds(ids);
+    }
 }

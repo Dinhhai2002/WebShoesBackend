@@ -60,13 +60,24 @@ public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> im
 
     @SuppressWarnings("unchecked")
 	@Override
-	public StoreProcedureListResult<ProductDetail> spGListProductDetail(int productId, int colorId, int sizeId, int materialId, String keySearch, int status, Pagination pagination)
-			throws Exception {
-		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_product_detail", ProductDetail.class)
+	public StoreProcedureListResult<ProductDetail> spGListProductDetail(
+			int productId, 
+			int colorId, 
+			int sizeId, 
+			int materialId,
+			int brandId,
+			int categoryId, 
+			String keySearch,
+			int status,
+			Pagination pagination) throws Exception {
+		StoredProcedureQuery query = this.getSession()
+				.createStoredProcedureQuery("sp_g_list_product_detail", ProductDetail.class)
 				.registerStoredProcedureParameter("productId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("colorId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("sizeId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("materialId", Integer.class, ParameterMode.IN)
+				.registerStoredProcedureParameter("brandId", Integer.class, ParameterMode.IN)
+				.registerStoredProcedureParameter("categoryId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("keySearch", String.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("status", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("_limit", Integer.class, ParameterMode.IN)
@@ -80,6 +91,8 @@ public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> im
 		query.setParameter("colorId", colorId);
 		query.setParameter("sizeId", sizeId);
 		query.setParameter("materialId", materialId);
+		query.setParameter("brandId", brandId);
+		query.setParameter("categoryId", categoryId);
 		query.setParameter("keySearch", keySearch);
 		query.setParameter("status", status);
 		query.setParameter("_limit", pagination.getLimit());

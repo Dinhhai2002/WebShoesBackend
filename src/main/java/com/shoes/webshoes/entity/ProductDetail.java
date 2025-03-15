@@ -54,4 +54,14 @@ public class ProductDetail extends BaseEntity{
 	private String imageUrl; 
 
 	private int status;
+
+	@Column(name = "brand_id")
+	private int brandId;
+
+	private String brand;
+
+	@Column(name = "category_id")
+	private int categoryId;
+
+	private String category;
 }

@@ -28,17 +28,26 @@ public class OrderDetailResponse {
 
 	private int status;
 
+	@JsonProperty("product_detail")
+	private ProductDetailResponse productDetailResponse;
+
 	public OrderDetailResponse() {
 
 	}
 
 	public OrderDetailResponse(OrderDetail entity) {
 		this.id = entity.getId();
-		this.orderId = entity.getId();
+		this.orderId = entity.getOrderId();
 		this.productDetailId = entity.getProductDetailId();
 		this.quantity = entity.getQuantity();
 		this.price = entity.getPrice();
+		this.totalPrice = entity.getTotalPrice();
 		this.status = entity.getStatus();
+	}
+
+	public OrderDetailResponse(OrderDetail entity, ProductDetailResponse productDetailResponse) {
+		this(entity);
+		this.productDetailResponse = productDetailResponse;
 	}
 
 	public List<OrderDetailResponse> mapToList(List<OrderDetail> entities) {

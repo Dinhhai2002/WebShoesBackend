@@ -7,15 +7,20 @@ import com.shoes.webshoes.entity.Category;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 
 public interface CategoryDao {
-    void create(Category category) throws Exception;
+    void create(Category category);
 
-	Category findOne(int id) throws Exception;
+	Category findOne(int id);
 	
-	void update(Category category) throws Exception;
+	void update(Category category);
 
-	List<Category> getAll() throws Exception;
+	List<Category> getAll();
 	
-	StoreProcedureListResult<Category> spGListCategory(String keySearch,int status,Pagination pagination) throws Exception;
+	StoreProcedureListResult<Category> spGListCategory(
+        int parentId,
+        String keySearch,
+        int status,
+        Pagination pagination
+    ) throws Exception;
 
-	Category findByName(String name) throws Exception;
+	Category findByName(String name);
 }

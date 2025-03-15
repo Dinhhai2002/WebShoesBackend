@@ -25,68 +25,68 @@ import com.shoes.webshoes.model.StoreProcedureListResult;
 public class BrandDaoImpl extends AbstractDao<Integer, Brand> implements BrandDao {
     @Override
     public void create(Brand brand) {
-       this.getSession().save(brand);
+        this.getSession().save(brand);
     }
 
     @Override
     public Brand findOne(int id) {
-       return this.getSession().find(Brand.class,id);
+        return this.getSession().find(Brand.class, id);
     }
 
     @Override
     public void update(Brand brand) {
-       this.getSession().update(brand);	
+        this.getSession().update(brand);
     }
 
     @Override
     public List<Brand> getAll() {
-       CriteriaBuilder builder = this.getBuilder();
-		CriteriaQuery<Brand> query = builder.createQuery(Brand.class);
-		Root<Brand> root = query.from(Brand.class);
-
-		return this.getSession().createQuery(query).getResultList();
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Brand> query = builder.createQuery(Brand.class);
+        Root<Brand> root = query.from(Brand.class);
+        return this.getSession().createQuery(query).getResultList();
     }
 
     @Override
     public Brand findByName(String name) {
         CriteriaBuilder builder = this.getBuilder();
-		CriteriaQuery<Brand> query = builder.createQuery(Brand.class);
-		Root<Brand> root = query.from(Brand.class);
-		query.where(builder.equal(root.get("name"), name));
-
-		return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
+        CriteriaQuery<Brand> query = builder.createQuery(Brand.class);
+        Root<Brand> root = query.from(Brand.class);
+        query.where(builder.equal(root.get("name"), name));
+        return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
     }
 
     @SuppressWarnings("unchecked")
-	@Override
-	public StoreProcedureListResult<Brand> spGListBrand(String keySearch, int status, Pagination pagination)
-			throws Exception {
-		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_brand", Brand.class)
-				.registerStoredProcedureParameter("keySearch", String.class, ParameterMode.IN)
-				.registerStoredProcedureParameter("status", Integer.class, ParameterMode.IN)
-				.registerStoredProcedureParameter("_limit", Integer.class, ParameterMode.IN)
-				.registerStoredProcedureParameter("_offset", Integer.class, ParameterMode.IN)
+    @Override
+    public StoreProcedureListResult<Brand> spGListBrand(
+            String keySearch,
+            int status,
+            Pagination pagination) throws Exception {
+        StoredProcedureQuery query = this.getSession()
+                .createStoredProcedureQuery("sp_g_list_brand", Brand.class)
+                .registerStoredProcedureParameter("keySearch", String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter("status", Integer.class, ParameterMode.IN)
+                .registerStoredProcedureParameter("_limit", Integer.class, ParameterMode.IN)
+                .registerStoredProcedureParameter("_offset", Integer.class, ParameterMode.IN)
+                .registerStoredProcedureParameter("total_record", Integer.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter("status_code", Integer.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter("message_error", String.class, ParameterMode.OUT);
 
-				.registerStoredProcedureParameter("total_record", Integer.class, ParameterMode.OUT)
-				.registerStoredProcedureParameter("status_code", Integer.class, ParameterMode.OUT)
-				.registerStoredProcedureParameter("message_error", String.class, ParameterMode.OUT);
+        query.setParameter("keySearch", keySearch);
+        query.setParameter("status", status);
+        query.setParameter("_limit", pagination.getLimit());
+        query.setParameter("_offset", pagination.getOffset());
 
-		query.setParameter("keySearch", keySearch);
-		query.setParameter("status", status);
-		query.setParameter("_limit", pagination.getLimit());
-		query.setParameter("_offset", pagination.getOffset());
+        int statusCode = (int) query.getOutputParameterValue("status_code");
+        String messageError = query.getOutputParameterValue("message_error").toString();
 
-		int statusCode = (int) query.getOutputParameterValue("status_code");
-		String messageError = query.getOutputParameterValue("message_error").toString();
-
-		switch (StoreProcedureStatusCodeEnum.valueOf(statusCode)) {
-		case SUCCESS:
-			int totalRecord = (int) query.getOutputParameterValue("total_record");
-			return new StoreProcedureListResult<>(statusCode, messageError, totalRecord, query.getResultList());
-		case INPUT_INVALID:
-			throw new TechresHttpException(HttpStatus.BAD_REQUEST, messageError);
-		default:
-			throw new Exception(messageError);
-		}
-	}
+        switch (StoreProcedureStatusCodeEnum.valueOf(statusCode)) {
+            case SUCCESS:
+                int totalRecord = (int) query.getOutputParameterValue("total_record");
+                return new StoreProcedureListResult<>(statusCode, messageError, totalRecord, query.getResultList());
+            case INPUT_INVALID:
+                throw new TechresHttpException(HttpStatus.BAD_REQUEST, messageError);
+            default:
+                throw new Exception(messageError);
+        }
+    }
 }

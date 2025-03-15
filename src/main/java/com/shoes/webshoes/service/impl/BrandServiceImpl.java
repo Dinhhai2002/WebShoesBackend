@@ -44,8 +44,10 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-	public StoreProcedureListResult<Brand> spGListBrand(String keySearch, int status,
-			Pagination pagination) throws Exception {
-		return brandDao.spGListBrand(keySearch, status, pagination);
-	}
+    public StoreProcedureListResult<Brand> spGListBrand(
+            String keySearch,
+            int status,
+            Pagination pagination) throws Exception {
+        return brandDao.spGListBrand(keySearch, status, pagination);
+    }
 }

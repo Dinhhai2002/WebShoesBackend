@@ -29,19 +29,20 @@ import com.shoes.webshoes.service.CategoryService;
 @RequestMapping("/api/v1/category")
 public class CategoryController  {
     @Autowired
-    public CategoryService categoryService;
+    private CategoryService categoryService;
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<CategoryResponse>>> getAll(
+			@RequestParam(name = "parent_id", required = false, defaultValue = "-1") int parentId,
 			@RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
 			@RequestParam(name = "status", required = false, defaultValue = "-1") int status,
 			@RequestParam(name = "page", required = false, defaultValue = "1") int page,
 			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
 		BaseResponse<BaseListDataResponse<CategoryResponse>> response = new BaseResponse<>();
 		Pagination pagination = new Pagination(page, limit);
-		StoreProcedureListResult<Category> listCategory = categoryService.spGListCategory(keySearch,
-				status, pagination);
+		StoreProcedureListResult<Category> listCategory = categoryService.spGListCategory(
+				parentId, keySearch, status, pagination);
 
 		BaseListDataResponse<CategoryResponse> listData = new BaseListDataResponse<>();
 
@@ -56,14 +57,14 @@ public class CategoryController  {
     @GetMapping("/{id}")
 	public ResponseEntity<BaseResponse<CategoryResponse>> findOneById(@PathVariable("id") int id) throws Exception {
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category Category = categoryService.findOne(id);
+		Category category = categoryService.findOne(id);
 
-		if (Category == null) {
+		if (category == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-        response.setData(new CategoryResponse(Category));
+        response.setData(new CategoryResponse(category));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -72,69 +73,75 @@ public class CategoryController  {
 	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<CategoryResponse>> changeStatus(@PathVariable("id") int id) throws Exception {
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category Category = categoryService.findOne(id);
+		Category category = categoryService.findOne(id);
 
-		if (Category == null) {
+		if (category == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Category.setStatus(Category.getStatus() == 1 ? 0 : 1);
+		category.setStatus(category.getStatus() == 1 ? 0 : 1);
 
-		categoryService.update(Category);
-        response.setData(new CategoryResponse(Category));
+		categoryService.update(category);
+        response.setData(new CategoryResponse(category));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping("/create")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<CategoryResponse>> create(
 			@Valid @RequestBody CRUDCategoryRequest wrapper) throws Exception {
 
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category CategoryCheck = categoryService.findByName(wrapper.getName());
+		Category categoryCheck = categoryService.findByName(wrapper.getName());
 
-		if (CategoryCheck != null) {
+		if (categoryCheck != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+			response.setMessageError(StringErrorValue.CATEGORY_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Category Category = new Category();
-		Category.setName(wrapper.getName());
-		Category.setStatus(1);
+		Category category = new Category();
+		category.setName(wrapper.getName());
+		category.setParentId(wrapper.getParentId());
+		category.setImageUrl(wrapper.getImageUrl());
+		category.setStatus(1);
 
-		categoryService.create(Category);
-		response.setData(new CategoryResponse(Category));
+		categoryService.create(category);
+		response.setData(new CategoryResponse(category));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping("/{id}/update")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<CategoryResponse>> update(@PathVariable("id") int id,
 			@Valid @RequestBody CRUDCategoryRequest wrapper) throws Exception {
 
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category Category = categoryService.findOne(id);
+		Category category = categoryService.findOne(id);
 
-		if (Category == null) {
+		if (category == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 		// check name đã tồn tại hay chưa
-		if (!Category.getName().equals(wrapper.getName())
+		if (!category.getName().equals(wrapper.getName())
 				&& categoryService.findByName(wrapper.getName()) != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		}
-		Category.setName(wrapper.getName());
-		categoryService.update(Category);
+		category.setName(wrapper.getName());
+		category.setParentId(wrapper.getParentId());
+		category.setImageUrl(wrapper.getImageUrl());
+		categoryService.update(category);
 
-		response.setData(new CategoryResponse(Category));
+		response.setData(new CategoryResponse(category));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

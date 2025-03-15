@@ -33,6 +33,14 @@ public class CRUDProductDetailRequest {
 	@JsonProperty("material_id")
 	private int materialId;
 
+	@Min(value = 1, message = "brandId not null")
+	@JsonProperty("brand_id")
+	private int brandId;
+
+	@Min(value = 1, message = "categoryId not null")
+	@JsonProperty("category_id")
+	private int categoryId;
+
 	@Min(value = 0 , message ="stock not null")
 	private int stock;
 
