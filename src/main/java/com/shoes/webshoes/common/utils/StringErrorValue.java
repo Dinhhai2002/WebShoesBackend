@@ -68,5 +68,6 @@ public class StringErrorValue {
 	public static final String ORDER_DETAIL_NOT_FOUND = "đơn hàng chi tiết không tồn tại!";
 	public static final String ORDER_DETAIL_IS_EXIST = "đơn hàng chi tiết đã tồn tại!";
 
+	public static final String BANNER_NOT_FOUND = "Banner không tồn tại trong hệ thống";
 
 }

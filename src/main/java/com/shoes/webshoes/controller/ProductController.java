@@ -127,12 +127,12 @@ public class ProductController  {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Brand brand = brandService.findOne(wrapper.getBrandId());
-		if (brand == null) {
-			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+//		Brand brand = brandService.findOne(wrapper.getBrandId());
+//		if (brand == null) {
+//			response.setStatus(HttpStatus.BAD_REQUEST);
+//			response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
 
 		Product product = new Product();
 		product.setName(wrapper.getName());

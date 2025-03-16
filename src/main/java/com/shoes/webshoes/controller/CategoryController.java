@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
@@ -23,6 +24,7 @@ import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.CategoryResponse;
 import com.shoes.webshoes.service.CategoryService;
+import com.shoes.webshoes.service.impl.FirebaseImageService;
 
 
 @RestController
@@ -30,6 +32,9 @@ import com.shoes.webshoes.service.CategoryService;
 public class CategoryController  {
     @Autowired
     private CategoryService categoryService;
+    
+    @Autowired
+	public FirebaseImageService iFirebaseImageService;
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -142,6 +147,31 @@ public class CategoryController  {
 		categoryService.update(category);
 
 		response.setData(new CategoryResponse(category));
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@PostMapping("/{id}/image")
+	public ResponseEntity<BaseResponse> uploadBanner(@RequestParam(name = "file") MultipartFile file,
+			@PathVariable("id") int id) throws Exception {
+		BaseResponse response = new BaseResponse();
+		Category category = categoryService.findOne(id);
+
+		if (category == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+		String fileName = iFirebaseImageService.save(file);
+
+		String imageUrl = iFirebaseImageService.getImageUrl(fileName);
+
+		category.setImageUrl(imageUrl);
+		categoryService.update(category);
+
+		response.setData(new CategoryResponse(category));
+		
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

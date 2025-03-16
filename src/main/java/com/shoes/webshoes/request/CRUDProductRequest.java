@@ -18,7 +18,7 @@ public class CRUDProductRequest {
 	@Length(max = 255, message = "Không được phép lớn hơn 255 kí tự")
 	private String name;
 
-	@Min(value = 1 , message ="brand not null")
+	@Min(value = 0 , message ="brand not null")
 	@JsonProperty("brand_id")
 	private int brandId;
 
@@ -27,7 +27,6 @@ public class CRUDProductRequest {
 	private int categoryId;
 
 	@NotEmpty(message = "description không được phép để trống")
-	@Length(max = 255, message = "Không được phép lớn hơn 255 kí tự")
 	private String description;
 
 	@Min(value = 0 , message ="giá sản phẩm not null")

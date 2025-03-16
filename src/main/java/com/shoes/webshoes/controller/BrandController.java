@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
@@ -23,6 +24,7 @@ import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.BrandResponse;
 import com.shoes.webshoes.service.BrandService;
+import com.shoes.webshoes.service.impl.FirebaseImageService;
 
 
 @RestController
@@ -30,6 +32,9 @@ import com.shoes.webshoes.service.BrandService;
 public class BrandController  {
     @Autowired
     private BrandService brandService;
+    
+    @Autowired
+   	public FirebaseImageService iFirebaseImageService;
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -138,6 +143,31 @@ public class BrandController  {
 		brandService.update(brand);
 
 		response.setData(new BrandResponse(brand));
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@PostMapping("/{id}/image")
+	public ResponseEntity<BaseResponse> uploadBanner(@RequestParam(name = "file") MultipartFile file,
+			@PathVariable("id") int id) throws Exception {
+		BaseResponse response = new BaseResponse();
+		Brand brand = brandService.findOne(id);
+
+		if (brand == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+		String fileName = iFirebaseImageService.save(file);
+
+		String imageUrl = iFirebaseImageService.getImageUrl(fileName);
+
+		brand.setImageUrl(imageUrl);
+		brandService.update(brand);
+
+		response.setData(new BrandResponse(brand));
+		
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
