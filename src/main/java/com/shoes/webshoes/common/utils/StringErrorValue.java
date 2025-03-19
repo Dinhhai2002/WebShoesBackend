@@ -70,4 +70,6 @@ public class StringErrorValue {
 
 	public static final String BANNER_NOT_FOUND = "Banner không tồn tại trong hệ thống";
 
+	public static final String PRODUCT_OUT_OF_STOCK = "Sản phẩm %s vượt quá số lượng tồn kho. Số lượng tồn: %d";
+
 }

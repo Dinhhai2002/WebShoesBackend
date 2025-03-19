@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shoes.webshoes.common.enums.PaymentMethodEnum;
 import com.shoes.webshoes.common.enums.PaymentStatusEnum;
 import com.shoes.webshoes.common.enums.StatusOrderEnum;
 import com.shoes.webshoes.common.utils.Pagination;
@@ -183,6 +184,25 @@ public class OrderController extends BaseController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
+		// Kiểm tra stock của sản phẩm
+		List<Integer> productDetailIds = cartDetails.getResult().stream()
+			.map(CartDetail::getProductDetailId)
+			.collect(Collectors.toList());
+
+		List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
+		Map<Integer, ProductDetail> productDetailMap = productDetails.stream()
+			.collect(Collectors.toMap(ProductDetail::getId, pd -> pd));
+
+		// Kiểm tra số lượng tồn kho
+		for (CartDetail cartDetail : cartDetails.getResult()) {
+			ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
+			if (productDetail != null && cartDetail.getQuantity() > productDetail.getStock()) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError("Sản phẩm " + productDetail.getName() + " vượt quá số lượng tồn kho. Số lượng tồn: " + productDetail.getStock());
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+		}
+
 		// Tạo order
 		Order order = new Order();
 		order.setUserId(users.getId());
@@ -195,43 +215,40 @@ public class OrderController extends BaseController {
 		
 		orderService.create(order);
 
-		// Tạo order details từ cart details
-		// Lấy danh sách productDetailIds từ cartDetails
-		List<Integer> productDetailIds = cartDetails.getResult().stream()
-			.map(CartDetail::getProductDetailId)
-			.collect(Collectors.toList());
-
-		// Lấy thông tin các ProductDetail
-		List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
-		// Tạo map để dễ dàng truy xuất ProductDetail theo ID
-		Map<Integer, ProductDetail> productDetailMap = productDetails.stream()
-			.collect(Collectors.toMap(ProductDetail::getId, pd -> pd));
-
+		// Tạo order details và cập nhật stock
 		for (CartDetail cartDetail : cartDetails.getResult()) {
 			OrderDetail orderDetail = new OrderDetail();
 			orderDetail.setOrderId(order.getId());
 			orderDetail.setProductDetailId(cartDetail.getProductDetailId());
 			orderDetail.setQuantity(cartDetail.getQuantity());
 			
-			// Lấy giá từ ProductDetail
 			ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
 			if (productDetail != null) {
 				orderDetail.setPrice(productDetail.getPrice());
-				// Tính tổng tiền cho từng orderDetail
 				BigDecimal totalPrice = productDetail.getPrice().multiply(new BigDecimal(cartDetail.getQuantity()));
 				orderDetail.setTotalPrice(totalPrice);
+
+				// Cập nhật số lượng tồn kho
+				productDetail.setStock(productDetail.getStock() - cartDetail.getQuantity());
+				productDetailService.update(productDetail);
 			}
 			
-			orderDetail.setStatus(1); // Assuming 1 is active status
-			
+			orderDetail.setStatus(1);
 			orderDetailService.create(orderDetail);
 			
-			// Xóa cart detail sau khi đã chuyển sang order detail
+			// Xóa cart detail
 			cartDetailService.delete(cartDetail.getId());
 		}
 
-		String paymentUrl = generateVnPayUrl(wrapper.getTotalPrice(), String.valueOf(order.getId()));
-		response.setData(paymentUrl);
+		// Chỉ tạo URL thanh toán VNPAY nếu phương thức thanh toán là VNPAY
+		if (wrapper.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()) {
+			String paymentUrl = generateVnPayUrl(wrapper.getTotalPrice(), String.valueOf(order.getId()));
+			response.setData(paymentUrl);
+		} else {
+			// Nếu là COD hoặc thanh toán tại quầy, trả về thông tin đơn hàng
+			response.setData(new OrderResponse(order));
+		}
+
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
