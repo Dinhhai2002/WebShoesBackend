@@ -47,4 +47,34 @@ public class Order extends BaseEntity{
 	private int paymentStatus;
 
 	private int status;
+
+	@Column(name = "address_id")
+	private Integer addressId;
+
+	@Column(name = "shipping_name")
+	private String shippingName;
+
+	@Column(name = "shipping_phone")
+	private String shippingPhone;
+
+	@Column(name = "shipping_ward_id")
+	private Integer shippingWardId;
+
+	@Column(name = "shipping_ward_name")
+	private String shippingWardName;
+
+	@Column(name = "shipping_district_id")
+	private Integer shippingDistrictId;
+
+	@Column(name = "shipping_district_name")
+	private String shippingDistrictName;
+
+	@Column(name = "shipping_city_id")
+	private Integer shippingCityId;
+
+	@Column(name = "shipping_city_name")
+	private String shippingCityName;
+
+	@Column(name = "shipping_address")
+	private String shippingAddress;
 }

@@ -4,7 +4,8 @@ public enum PaymentStatusEnum {
 	PENDING(1), 
     PROCESSING(2),
     PAID(3),
-    FAILED(4);
+    FAILED(4),
+    CANCELLED(5);
 
 	private int value;
 
@@ -26,6 +27,8 @@ public enum PaymentStatusEnum {
             return PAID;
         case 4:
             return FAILED;
+        case 5:
+            return CANCELLED;
 		default:
 			return PENDING;
 		}
@@ -43,5 +46,6 @@ public enum PaymentStatusEnum {
     // Đang chờ thanh toán – Đã chọn phương thức thanh toán online nhưng chưa hoàn tất giao dịch.
     // Đã thanh toán – Thanh toán đã được xác nhận thành công.
     // Thanh toán thất bại – Thanh toán không thành công (có thể do lỗi hệ thống, thẻ bị từ chối, v.v.).
+    // Đã hủy - Đơn hàng đã bị hủy, không thể thanh toán.
 
 }

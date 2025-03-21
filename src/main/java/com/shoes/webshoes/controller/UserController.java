@@ -166,27 +166,27 @@ public class UserController extends BaseController {
 	}
 
 	@PostMapping("/upload-avatar")
-	public ResponseEntity<BaseResponse<ImageResponse>> create(@RequestParam(name = "file") MultipartFile file)
+	public ResponseEntity<BaseResponse> create(@RequestParam(name = "file") MultipartFile file)
 			throws Exception {
 
-		BaseResponse<ImageResponse> response = new BaseResponse<>();
+		BaseResponse response = new BaseResponse<>();
 		Users user = this.getUser();
 
 		String fileName = iFirebaseImageService.save(file);
 
 		String imageUrl = iFirebaseImageService.getImageUrl(fileName);
 
-		Image image = new Image();
-		image.setUserId(user.getId());
-		image.setUrl(imageUrl);
-
-		imageService.create(image);
-		user.setAvatarId(image.getId());
-		user.setAvatarUrl(image.getUrl());
+//		Image image = new Image();
+//		image.setUserId(user.getId());
+//		image.setUrl(imageUrl);
+//
+//		imageService.create(image);
+//		user.setAvatarId(image.getId());
+		user.setAvatarUrl(imageUrl);
 
 		userService.update(user);
 
-		response.setData(new ImageResponse(image));
+		response.setData(imageUrl);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

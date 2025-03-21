@@ -75,4 +75,6 @@ public class StringErrorValue {
 	public static final String REVIEW_NOT_FOUND = "Đánh giá không tồn tại!";
 	public static final String REVIEW_IS_EXIST = "Bạn đã đánh giá sản phẩm này!";
 
+	public static final String ADDRESS_NOT_FOUND = "Địa chỉ không tồn tại trong hệ thống";
+
 }

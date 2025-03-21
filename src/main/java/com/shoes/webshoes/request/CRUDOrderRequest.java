@@ -3,6 +3,7 @@ package com.shoes.webshoes.request;
 import java.math.BigDecimal;
 
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -26,6 +27,10 @@ public class CRUDOrderRequest {
 	@Min(value = 0 , message ="tổng giá trị cuối cùng của đơn hàng not null")
 	@JsonProperty("payment_method")
 	private int paymentMethod;
+
+	@NotNull(message = "Địa chỉ giao hàng không được để trống")
+	@JsonProperty("address_id")
+	private Integer addressId;
 
 }
 

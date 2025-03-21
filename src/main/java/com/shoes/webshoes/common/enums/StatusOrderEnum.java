@@ -37,6 +37,15 @@ public enum StatusOrderEnum {
 		}
 	}
 
+    public static boolean isValidStatus(int status) {
+        for (StatusOrderEnum orderStatus : StatusOrderEnum.values()) {
+            if (orderStatus.getValue() == status) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // PENDING – Đơn hàng mới được tạo, đang chờ xác nhận.
     // CONFIRMED – Đơn hàng đã được xác nhận bởi hệ thống hoặc người bán.
     // PROCESSING – Đơn hàng đang được chuẩn bị (đóng gói, xuất kho, v.v.).

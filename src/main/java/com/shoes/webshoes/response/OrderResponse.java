@@ -41,7 +41,35 @@ public class OrderResponse {
 	@JsonProperty("order_detail")
 	private List<OrderDetailResponse> orderDetailResponse;
 
+	@JsonProperty("address_id")
+	private Integer addressId;
 
+	@JsonProperty("shipping_name")
+	private String shippingName;
+
+	@JsonProperty("shipping_phone")
+	private String shippingPhone;
+
+	@JsonProperty("shipping_ward_id")
+	private Integer shippingWardId;
+
+	@JsonProperty("shipping_ward_name")
+	private String shippingWardName;
+
+	@JsonProperty("shipping_district_id")
+	private Integer shippingDistrictId;
+
+	@JsonProperty("shipping_district_name")
+	private String shippingDistrictName;
+
+	@JsonProperty("shipping_city_id")
+	private Integer shippingCityId;
+
+	@JsonProperty("shipping_city_name")
+	private String shippingCityName;
+
+	@JsonProperty("shipping_address")
+	private String shippingAddress;
 
 	public OrderResponse() {
 
@@ -58,6 +86,16 @@ public class OrderResponse {
 		this.paymentStatus = entity.getPaymentStatus();
 		this.status = entity.getStatus();
 		this.createdAt = entity.getDatetimeFormatVN(entity.getCreatedAt());
+		this.addressId = entity.getAddressId();
+		this.shippingName = entity.getShippingName();
+		this.shippingPhone = entity.getShippingPhone();
+		this.shippingWardId = entity.getShippingWardId();
+		this.shippingWardName = entity.getShippingWardName();
+		this.shippingDistrictId = entity.getShippingDistrictId();
+		this.shippingDistrictName = entity.getShippingDistrictName();
+		this.shippingCityId = entity.getShippingCityId();
+		this.shippingCityName = entity.getShippingCityName();
+		this.shippingAddress = entity.getShippingAddress();
 	}
 
 	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse) {
