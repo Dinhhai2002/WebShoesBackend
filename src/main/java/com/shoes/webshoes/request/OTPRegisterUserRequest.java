@@ -46,7 +46,7 @@ public class OTPRegisterUserRequest {
 	private String password;
 
 	@NotEmpty(message = "birthday không được phép để trống")
-	@Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "Ngày sinh phải theo định dạng 'dd/mm/yyyy'")
+//	@Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "Ngày sinh phải theo định dạng 'dd/mm/yyyy'")
 	private String birthday;
 
 	@Min(value = 1, message = "Vui lòng nhập Tỉnh/Thành phố của nhà hàng")

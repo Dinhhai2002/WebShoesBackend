@@ -145,7 +145,7 @@ public class JwtAuthenticationController extends BaseController {
 
         response.setData(new UserResponse(userService.spUCreateUsers(wrapper.getUserName(), wrapper.getFullName(),
                 wrapper.getEmail(), wrapper.getPhone(), Utils.encodeBase64(wrapper.getPassword()), wrapper.getGender(),
-                this.formatDate(wrapper.getBirthday()), wrapper.getWardId(), wrapper.getDistrictId(),
+                wrapper.getBirthday(), wrapper.getWardId(), wrapper.getDistrictId(),
                 wrapper.getCityId(), wrapper.getFullAddress())));
 
         return new ResponseEntity<>(response, HttpStatus.OK);

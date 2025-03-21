@@ -8,9 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -23,17 +21,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 
 import com.shoes.webshoes.common.enums.DiscountTypeEnum;
+import com.shoes.webshoes.entity.Cities;
 import com.shoes.webshoes.entity.Users;
 import com.shoes.webshoes.entity.Voucher;
 import com.shoes.webshoes.response.BaseResponse;
+import com.shoes.webshoes.response.CityResponse;
+import com.shoes.webshoes.response.DistrictResponse;
+import com.shoes.webshoes.response.WardsResponse;
 import com.shoes.webshoes.security.JwtTokenUtil;
+import com.shoes.webshoes.service.CityService;
+import com.shoes.webshoes.service.DistrictService;
 import com.shoes.webshoes.service.UserService;
+import com.shoes.webshoes.service.WardsService;
 import com.shoes.webshoes.service.impl.JwtUserDetailsService;
 import com.shoes.webshoes.service.impl.SendEmail;
 
@@ -48,14 +55,14 @@ public class BaseController {
 	@Autowired
 	public SendEmail sendEmail;
 
-	// @Autowired
-	// public CityService cityService;
+	 @Autowired
+	 public CityService cityService;
 
-	// @Autowired
-	// public DistrictService districtService;
+	 @Autowired
+	 public DistrictService districtService;
 
-	// @Autowired
-	// public WardsService wardsService;
+	 @Autowired
+	 public WardsService wardsService;
 
 
 	@Autowired
@@ -169,6 +176,40 @@ public class BaseController {
 			amountVoucher = voucher.getDiscountValue();
 		}
 		return amountVoucher;
+	}
+	
+	@GetMapping("/get-all-city")
+	public ResponseEntity<BaseResponse<List<CityResponse>>> findAllCity() throws Exception {
+
+		BaseResponse<List<CityResponse>> response = new BaseResponse<>();
+
+		List<Cities> cities = cityService.getAll();
+
+		response.setData(new CityResponse().mapToList(cities));
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping("/{id}/get-district-by-city")
+	public ResponseEntity<BaseResponse<List<DistrictResponse>>> findDistrictByCityId(@PathVariable("id") int id)
+			throws Exception {
+
+		BaseResponse<List<DistrictResponse>> response = new BaseResponse<>();
+
+		response.setData(new DistrictResponse().mapToList(districtService.findByCityId(id)));
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping("/{id}/get-ward-by-district")
+	public ResponseEntity<BaseResponse<List<WardsResponse>>> findWardByDistrictId(@PathVariable("id") int id)
+			throws Exception {
+
+		BaseResponse<List<WardsResponse>> response = new BaseResponse<>();
+
+		response.setData(new WardsResponse().mapToList(wardsService.findByDistrictId(id)));
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 }

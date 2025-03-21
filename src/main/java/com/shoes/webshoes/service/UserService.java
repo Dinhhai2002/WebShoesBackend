@@ -1,6 +1,7 @@
 package com.shoes.webshoes.service;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.entity.Users;
@@ -35,5 +36,7 @@ public interface UserService {
 	Users findUsersByEmail(String email, int isGoogle) throws Exception;
 
 	List<Users> getAll() throws Exception;
+
+	List<Users> findByIds(List<Integer> ids) throws Exception;
 
 }

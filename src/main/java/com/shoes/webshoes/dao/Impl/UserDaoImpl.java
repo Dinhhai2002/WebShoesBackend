@@ -1,5 +1,6 @@
 package com.shoes.webshoes.dao.Impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.ParameterMode;
@@ -269,6 +270,18 @@ public class UserDaoImpl extends AbstractDao<Integer, Users> implements UserDao 
 		query.where(combinedCondition);
 
 		return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
+	}
+
+	@Override
+	public List<Users> findByIds(List<Integer> ids) throws Exception {
+		if (ids == null || ids.isEmpty()) {
+			return new ArrayList<>();
+		}
+		CriteriaBuilder builder = this.getBuilder();
+		CriteriaQuery<Users> query = builder.createQuery(Users.class);
+		Root<Users> root = query.from(Users.class);
+		query.where(root.get("id").in(ids));
+		return this.getSession().createQuery(query).getResultList();
 	}
 
 }

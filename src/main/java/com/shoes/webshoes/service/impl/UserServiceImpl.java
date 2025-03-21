@@ -89,4 +89,9 @@ public class UserServiceImpl implements UserService {
 		return usersDao.findUsersByUsersNameAndPassword(usersName, password);
 	}
 
+	@Override
+	public List<Users> findByIds(List<Integer> ids) throws Exception {
+		return usersDao.findByIds(ids);
+	}
+
 }

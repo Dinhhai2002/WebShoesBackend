@@ -72,4 +72,7 @@ public class StringErrorValue {
 
 	public static final String PRODUCT_OUT_OF_STOCK = "Sản phẩm %s vượt quá số lượng tồn kho. Số lượng tồn: %d";
 
+	public static final String REVIEW_NOT_FOUND = "Đánh giá không tồn tại!";
+	public static final String REVIEW_IS_EXIST = "Bạn đã đánh giá sản phẩm này!";
+
 }

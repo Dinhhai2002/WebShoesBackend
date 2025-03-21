@@ -40,4 +40,6 @@ public interface UserDao {
 
 	Users findUsersByEmail(String email, int isGoogle) throws Exception;
 
+	List<Users> findByIds(List<Integer> ids) throws Exception;
+
 }
