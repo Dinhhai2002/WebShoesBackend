@@ -53,8 +53,8 @@ public class VoucherResponse {
 		this.discountValue = entity.getDiscountValue();
 		this.minOrderValue = entity.getMinOrderValue();
 		this.maxDiscount = entity.getMaxDiscount();
-		this.startDate = entity.getDatetimeFormatVN(entity.getStartDate());
-		this.endDate = entity.getDatetimeFormatVN(entity.getEndDate());
+		this.startDate = entity.getFullDatetimeFormatVN(entity.getStartDate());
+		this.endDate = entity.getFullDatetimeFormatVN(entity.getEndDate());
 		this.usageLimit = entity.getUsageLimit();
 		this.usedCount = entity.getUsedCount();
 		this.status = entity.getStatus();

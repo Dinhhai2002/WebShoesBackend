@@ -1,7 +1,7 @@
 package com.shoes.webshoes.common.enums;
 
 public enum RoleEnum {
-	USER(0), ADMIN(1);
+	USER(1), ADMIN(2), STAFF(3);
 
 	private int value;
 
@@ -15,10 +15,12 @@ public enum RoleEnum {
 
 	public static RoleEnum valueOf(int value) {
 		switch (value) {
-		case 0:
-			return USER;
 		case 1:
+			return USER;
+		case 2:
 			return ADMIN;
+		case 3:
+			return STAFF;
 		default:
 			return USER;
 		}
@@ -30,6 +32,8 @@ public enum RoleEnum {
 			return "USER";
 		case ADMIN:
 			return "ADMIN";
+		case STAFF:
+			return "STAFF";
 		default:
 			return "USER";
 		}

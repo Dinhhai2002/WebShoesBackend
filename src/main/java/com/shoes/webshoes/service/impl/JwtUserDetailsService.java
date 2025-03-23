@@ -37,6 +37,9 @@ public class JwtUserDetailsService implements UserDetailsService {
 		}  else if (user.getRole() == RoleEnum.ADMIN.getValue()) {
 			roleString = "ADMIN";
 		}
+		else if (user.getRole() == RoleEnum.STAFF.getValue()) {
+			roleString = "STAFF";
+		}
 
 		if (user.getUserName().equals(username)) {
 			return new User(user.getUserName(), user.getPassword(), getAuthorities(roleString));

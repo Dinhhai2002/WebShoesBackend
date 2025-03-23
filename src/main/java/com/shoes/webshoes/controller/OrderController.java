@@ -515,7 +515,7 @@ public class OrderController extends BaseController {
 	}
 
 	@PostMapping("/{id}/change-payment-status")
-	@PreAuthorize("hasAnyAuthority('ADMIN')")
+//	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<OrderResponse>> changePaymentStatus(
 			@PathVariable("id") int id,
 			@Valid @RequestBody ChangePaymentStatusRequest wrapper) throws Exception {
