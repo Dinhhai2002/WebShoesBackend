@@ -97,7 +97,7 @@ public class SizeController  {
 
 		if (sizeCheck != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.SIZE_NOT_FOUND);
+			response.setMessageError(StringErrorValue.SIZE_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 

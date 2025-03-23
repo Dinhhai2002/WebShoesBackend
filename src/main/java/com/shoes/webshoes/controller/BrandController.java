@@ -26,6 +26,7 @@ import com.shoes.webshoes.response.BrandResponse;
 import com.shoes.webshoes.service.BrandService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/brand")
@@ -54,6 +55,19 @@ public class BrandController  {
 		listData.setTotalRecord(listBrand.getTotalRecord());
 
 		response.setData(listData);
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+    @GetMapping("/all")
+	public ResponseEntity<BaseResponse<List<BrandResponse>>> getAllBrands() throws Exception {
+		BaseResponse<List<BrandResponse>> response = new BaseResponse<>();
+		
+		// Lấy tất cả brand có status = 1 (active)
+		StoreProcedureListResult<Brand> listBrand = brandService.spGListBrand("", 1, new Pagination(0, Integer.MAX_VALUE));
+		
+		List<BrandResponse> brandResponses = new BrandResponse().mapToList(listBrand.getResult());
+		response.setData(brandResponses);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

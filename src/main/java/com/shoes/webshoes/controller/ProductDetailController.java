@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
+import com.shoes.webshoes.entity.Brand;
+import com.shoes.webshoes.entity.Category;
 import com.shoes.webshoes.entity.Color;
 import com.shoes.webshoes.entity.Materials;
 import com.shoes.webshoes.entity.Product;
@@ -26,16 +29,14 @@ import com.shoes.webshoes.request.CRUDProductDetailRequest;
 import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.ProductDetailResponse;
+import com.shoes.webshoes.service.BrandService;
+import com.shoes.webshoes.service.CategoryService;
 import com.shoes.webshoes.service.ColorService;
 import com.shoes.webshoes.service.MaterialsService;
 import com.shoes.webshoes.service.ProductDetailService;
 import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.SizeService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
-import com.shoes.webshoes.service.BrandService;
-import com.shoes.webshoes.service.CategoryService;
-import com.shoes.webshoes.entity.Brand;
-import com.shoes.webshoes.entity.Category;
 
 
 @RestController
@@ -209,9 +210,101 @@ public class ProductDetailController  {
 
 	@PostMapping("/{id}/update")
 	public ResponseEntity<BaseResponse<ProductDetailResponse>> update(@PathVariable("id") int id,
-			@Valid @RequestBody CRUDProductDetailRequest wrapper) throws Exception {
+	        @Valid @RequestBody CRUDProductDetailRequest wrapper) throws Exception {
 
-		BaseResponse<ProductDetailResponse> response = new BaseResponse<>();
+	    BaseResponse<ProductDetailResponse> response = new BaseResponse<>();
+	    ProductDetail productDetail = productDetailService.findOne(id);
+
+	    if (productDetail == null) {
+	        response.setStatus(HttpStatus.BAD_REQUEST);
+	        response.setMessageError(StringErrorValue.PRODUCT_DETAIL_NOT_FOUND);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
+
+	    if (!productDetail.getName().equals(wrapper.getName())
+	            && productDetailService.findByName(wrapper.getName()) != null) {
+	        response.setStatus(HttpStatus.BAD_REQUEST);
+	        response.setMessageError(StringErrorValue.PRODUCT_DETAIL_IS_EXIST);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
+
+	    // Cập nhật brand
+	    if (wrapper.getBrandId() > 0) {
+	        Brand brand = brandService.findOne(wrapper.getBrandId());
+	        if (brand == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+	        productDetail.setBrandId(brand.getId());
+	        productDetail.setBrand(brand.getName());
+	    }
+
+	    // Cập nhật category
+	    if (wrapper.getCategoryId() > 0) {
+	        Category category = categoryService.findOne(wrapper.getCategoryId());
+	        if (category == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+	        productDetail.setCategoryId(category.getId());
+	        productDetail.setCategory(category.getName());
+	    }
+
+	    // Cập nhật color
+	    if (wrapper.getColorId() > 0) {
+	        Color color = colorService.findOne(wrapper.getColorId());
+	        if (color == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.COLOR_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+	        productDetail.setColorId(color.getId());
+	        productDetail.setColor(color.getName());
+	    }
+
+	    // Cập nhật size
+	    if (wrapper.getSizeId() > 0) {
+	        Size size = sizeService.findOne(wrapper.getSizeId());
+	        if (size == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.SIZE_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+	        productDetail.setSizeId(size.getId());
+	        productDetail.setSize(size.getName());
+	    }
+
+	    // Cập nhật material
+	    if (wrapper.getMaterialId() > 0) {
+	        Materials material = materialsService.findOne(wrapper.getMaterialId());
+	        if (material == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.MATERIALS_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+	        productDetail.setMaterialId(material.getId());
+	        productDetail.setMaterial(material.getName());
+	    }
+
+	    // Các trường còn lại
+	    productDetail.setName(wrapper.getName());
+	    productDetail.setPrice(wrapper.getPrice());
+	    productDetail.setStock(wrapper.getStock());
+
+	    productDetailService.update(productDetail);
+
+	    response.setData(new ProductDetailResponse(productDetail));
+	    return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@PostMapping("/{id}/image")
+	public ResponseEntity<BaseResponse> uploadBanner(@RequestParam(name = "file") MultipartFile file,
+			@PathVariable("id") int id) throws Exception {
+		BaseResponse response = new BaseResponse();
 		ProductDetail productDetail = productDetailService.findOne(id);
 
 		if (productDetail == null) {
@@ -220,41 +313,15 @@ public class ProductDetailController  {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		if (!productDetail.getName().equals(wrapper.getName())
-				&& productDetailService.findByName(wrapper.getName()) != null) {
-			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_IS_EXIST);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+		String fileName = iFirebaseImageService.save(file);
 
-		if (wrapper.getBrandId() > 0) {
-			Brand brand = brandService.findOne(wrapper.getBrandId());
-			if (brand == null) {
-				response.setStatus(HttpStatus.BAD_REQUEST);
-				response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			productDetail.setBrandId(brand.getId());
-			productDetail.setBrand(brand.getName());
-		}
+		String imageUrl = iFirebaseImageService.getImageUrl(fileName);
 
-		if (wrapper.getCategoryId() > 0) {
-			Category category = categoryService.findOne(wrapper.getCategoryId());
-			if (category == null) {
-				response.setStatus(HttpStatus.BAD_REQUEST);
-				response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			productDetail.setCategoryId(category.getId());
-			productDetail.setCategory(category.getName());
-		}
-
-		productDetail.setName(wrapper.getName());
-		productDetail.setPrice(wrapper.getPrice());
-		productDetail.setStock(wrapper.getStock());
+		productDetail.setImageUrl(imageUrl);
 		productDetailService.update(productDetail);
 
 		response.setData(new ProductDetailResponse(productDetail));
+		
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

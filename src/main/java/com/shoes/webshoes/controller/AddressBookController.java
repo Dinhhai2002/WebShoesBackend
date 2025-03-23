@@ -45,6 +45,28 @@ public class AddressBookController extends BaseController {
         response.setData(listData);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+    
+    @GetMapping("/all")
+    public ResponseEntity<BaseResponse<BaseListDataResponse<AddressBookResponse>>> getAllAdmin(
+    		@RequestParam(name = "user_id", required = false, defaultValue = "-1") int userId ,
+            @RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
+            @RequestParam(name = "status", required = false, defaultValue = "-1") int status,
+            @RequestParam(name = "page", required = false, defaultValue = "1") int page,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
+        
+        BaseResponse<BaseListDataResponse<AddressBookResponse>> response = new BaseResponse<>();
+        
+        Pagination pagination = new Pagination(page, limit);
+        StoreProcedureListResult<AddressBook> listResult = addressBookService.spGListAddressBook(
+        		userId, keySearch, status, pagination);
+
+        BaseListDataResponse<AddressBookResponse> listData = new BaseListDataResponse<>();
+        listData.setList(new AddressBookResponse().mapToList(listResult.getResult()));
+        listData.setTotalRecord(listResult.getTotalRecord());
+
+        response.setData(listData);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<BaseResponse<AddressBookResponse>> findOne(@PathVariable("id") int id) throws Exception {
@@ -52,7 +74,7 @@ public class AddressBookController extends BaseController {
         Users currentUser = this.getUser();
         
         AddressBook addressBook = addressBookService.findOne(id);
-        if (addressBook == null || addressBook.getUserId() != currentUser.getId()) {
+        if (addressBook == null) {
             response.setStatus(HttpStatus.BAD_REQUEST);
             response.setMessageError(StringErrorValue.ADDRESS_NOT_FOUND);
             return new ResponseEntity<>(response, HttpStatus.OK);

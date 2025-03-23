@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 public class OrderResponse {
-    private int id;
+	private int id;
 
 	@JsonProperty("user_id")
 	private int userId;
@@ -20,7 +20,7 @@ public class OrderResponse {
 	private Integer voucherId;
 
 	private BigDecimal price;
-	
+
 	@JsonProperty("discount_amount")
 	private BigDecimal discountAmount;
 
@@ -34,7 +34,7 @@ public class OrderResponse {
 	private int paymentStatus;
 
 	private int status;
-	
+
 	@JsonProperty("created_at")
 	private String createdAt;
 
@@ -71,6 +71,9 @@ public class OrderResponse {
 	@JsonProperty("shipping_address")
 	private String shippingAddress;
 
+	@JsonProperty("customer_phone")
+	private String customerPhone;
+
 	public OrderResponse() {
 
 	}
@@ -96,6 +99,7 @@ public class OrderResponse {
 		this.shippingCityId = entity.getShippingCityId();
 		this.shippingCityName = entity.getShippingCityName();
 		this.shippingAddress = entity.getShippingAddress();
+		this.customerPhone = entity.getCustomerPhone();
 	}
 
 	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse) {

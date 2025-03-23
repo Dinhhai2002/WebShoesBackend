@@ -77,4 +77,7 @@ public class Order extends BaseEntity{
 
 	@Column(name = "shipping_address")
 	private String shippingAddress;
+	
+	@Column(name = "customer_phone")
+	private String customerPhone;
 }

@@ -1,6 +1,8 @@
 package com.shoes.webshoes.controller;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -62,8 +64,17 @@ public class ProductController  {
 				status, pagination);
 
 		BaseListDataResponse<ProductResponse> listData = new BaseListDataResponse<>();
+		List<ProductResponse> productResponses = listProduct.getResult().stream().map(product -> {
+			Brand brand = brandService.findOne(product.getBrandId());
+			Category category = categoryService.findOne(product.getCategoryId());
+			return new ProductResponse(
+				product, 
+				brand != null ? brand.getName() : null,
+				category != null ? category.getName() : null
+			);
+		}).collect(Collectors.toList());
 
-		listData.setList(new ProductResponse().mapToList(listProduct.getResult()));
+		listData.setList(productResponses);
 		listData.setTotalRecord(listProduct.getTotalRecord());
 
 		response.setData(listData);
@@ -81,7 +92,15 @@ public class ProductController  {
 			response.setMessageError(StringErrorValue.PRODUCT_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-        response.setData(new ProductResponse(product));
+
+		Brand brand = brandService.findOne(product.getBrandId());
+		Category category = categoryService.findOne(product.getCategoryId());
+		
+		response.setData(new ProductResponse(
+			product,
+			brand != null ? brand.getName() : null,
+			category != null ? category.getName() : null
+		));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

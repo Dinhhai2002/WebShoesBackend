@@ -44,6 +44,8 @@ import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDOrderRequest;
 import com.shoes.webshoes.request.ChangePaymentStatusRequest;
 import com.shoes.webshoes.request.ChangeStatusOrderRequest;
+import com.shoes.webshoes.request.StaffOrderProductRequest;
+import com.shoes.webshoes.request.StaffOrderRequest;
 import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.OrderDetailResponse;
@@ -370,6 +372,88 @@ public class OrderController extends BaseController {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+	
+	@PostMapping("/create-by-staff")
+	public ResponseEntity<BaseResponse> createByStaff(
+	        @Valid @RequestBody StaffOrderRequest request) throws Exception {
+	    
+	    BaseResponse response = new BaseResponse<>();
+	    Users currentUser = this.getUser(); // Nhân viên tạo đơn
+
+	    // Kiểm tra địa chỉ giao hàng
+	    AddressBook shippingAddress = addressBookService.findOne(request.getAddressId());
+	    if (shippingAddress == null || shippingAddress.getUserId() != currentUser.getId()) {
+	        response.setStatus(HttpStatus.BAD_REQUEST);
+	        response.setMessageError(StringErrorValue.ADDRESS_NOT_FOUND);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
+
+	    // Lấy danh sách sản phẩm từ request
+	    List<Integer> productDetailIds = request.getProducts().stream()
+	            .map(StaffOrderProductRequest::getProductDetailId)
+	            .collect(Collectors.toList());
+
+	    List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
+	    Map<Integer, ProductDetail> productDetailMap = productDetails.stream()
+	            .collect(Collectors.toMap(ProductDetail::getId, pd -> pd));
+
+	    // Kiểm tra tồn kho
+	    for (StaffOrderProductRequest item : request.getProducts()) {
+	        ProductDetail pd = productDetailMap.get(item.getProductDetailId());
+	        if (pd == null || item.getQuantity() > pd.getStock()) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError("Sản phẩm " + (pd != null ? pd.getName() : "không xác định") +
+	                    " vượt quá số lượng tồn kho.");
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+	    }
+
+	    // Tạo đơn hàng
+	    Order order = new Order();
+	    order.setUserId(currentUser.getId());
+	    order.setPrice(request.getPrice());
+	    order.setDiscountAmount(request.getDiscountAmount());
+	    order.setTotalPrice(request.getTotalPrice());
+	    order.setPaymentMethod(request.getPaymentMethod());
+	    order.setPaymentStatus(PaymentStatusEnum.PAID.getValue());
+	    order.setStatus(StatusOrderEnum.DELIVERED.getValue());
+	    order.setCustomerPhone(request.getCustomerPhone());
+
+	    // Gán địa chỉ giao hàng
+	    order.setAddressId(shippingAddress.getId());
+	    order.setShippingName(shippingAddress.getFullName());
+	    order.setShippingPhone(shippingAddress.getPhone());
+	    order.setShippingWardId(shippingAddress.getWardId());
+	    order.setShippingWardName(shippingAddress.getWardName());
+	    order.setShippingDistrictId(shippingAddress.getDistrictId());
+	    order.setShippingDistrictName(shippingAddress.getDistrictName());
+	    order.setShippingCityId(shippingAddress.getCityId());
+	    order.setShippingCityName(shippingAddress.getCityName());
+	    order.setShippingAddress(shippingAddress.getFullAddress());
+
+	    orderService.create(order);
+
+	    // Tạo order detail
+	    for (StaffOrderProductRequest item : request.getProducts()) {
+	        ProductDetail pd = productDetailMap.get(item.getProductDetailId());
+
+	        OrderDetail orderDetail = new OrderDetail();
+	        orderDetail.setOrderId(order.getId());
+	        orderDetail.setProductDetailId(item.getProductDetailId());
+	        orderDetail.setQuantity(item.getQuantity());
+	        orderDetail.setPrice(pd.getPrice());
+	        orderDetail.setTotalPrice(pd.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+	        orderDetail.setStatus(1);
+	        orderDetailService.create(orderDetail);
+	    }
+
+	    // ⚠️ Trừ tồn kho ngay vì là mua tại quầy
+	    updateProductStock(order.getId());
+
+	    response.setData(new OrderResponse(order));
+	    return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 
 	@PostMapping("/{id}/update")
 	public ResponseEntity<BaseResponse<OrderResponse>> update(@PathVariable("id") int id,

@@ -97,7 +97,7 @@ public class ColorController  {
 
 		if (colorCheck != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.COLOR_NOT_FOUND);
+			response.setMessageError(StringErrorValue.COLOR_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 

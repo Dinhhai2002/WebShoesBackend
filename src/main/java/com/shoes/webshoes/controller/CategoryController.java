@@ -26,6 +26,7 @@ import com.shoes.webshoes.response.CategoryResponse;
 import com.shoes.webshoes.service.CategoryService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/category")
@@ -55,6 +56,20 @@ public class CategoryController  {
 		listData.setTotalRecord(listCategory.getTotalRecord());
 
 		response.setData(listData);
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+    @GetMapping("/all")
+	public ResponseEntity<BaseResponse<List<CategoryResponse>>> getAllCategories() throws Exception {
+		BaseResponse<List<CategoryResponse>> response = new BaseResponse<>();
+		
+		// Lấy tất cả category có status = 1 (active)
+		StoreProcedureListResult<Category> listCategory = categoryService.spGListCategory(
+				-1, "", 1, new Pagination(0, Integer.MAX_VALUE));
+		
+		List<CategoryResponse> categoryResponses = new CategoryResponse().mapToList(listCategory.getResult());
+		response.setData(categoryResponses);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

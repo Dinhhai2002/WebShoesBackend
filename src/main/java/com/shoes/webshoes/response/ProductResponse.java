@@ -18,8 +18,14 @@ public class ProductResponse {
 	@JsonProperty("brand_id")
 	private int brandId;
 
+	@JsonProperty("brand_name")
+	private String brandName;
+
 	@JsonProperty("category_id")
 	private int categoryId;
+
+	@JsonProperty("category_name")
+	private String categoryName;
 
 	private String description;
 
@@ -31,11 +37,9 @@ public class ProductResponse {
 	@JsonProperty("image_url")
 	private String imageUrl; 
 
-
 	private int status;
 
 	public ProductResponse() {
-
 	}
 
 	public ProductResponse(Product entity) {
@@ -48,6 +52,12 @@ public class ProductResponse {
 		this.averageRating = entity.getAverageRating();
 		this.imageUrl = entity.getImageUrl();
 		this.status = entity.getStatus();
+	}
+
+	public ProductResponse(Product entity, String brandName, String categoryName) {
+		this(entity);
+		this.brandName = brandName;
+		this.categoryName = categoryName;
 	}
 
 	public List<ProductResponse> mapToList(List<Product> entities) {
