@@ -37,6 +37,9 @@ public class ProductResponse {
 	@JsonProperty("image_url")
 	private String imageUrl; 
 
+	@JsonProperty("images")
+	private List<String> images;
+
 	private int status;
 
 	public ProductResponse() {
@@ -53,6 +56,11 @@ public class ProductResponse {
 		this.imageUrl = entity.getImageUrl();
 		this.status = entity.getStatus();
 	}
+
+	public ProductResponse(Product entity, List<String> images) {
+		this(entity);
+		this.images = images;
+	}	
 
 	public ProductResponse(Product entity, String brandName, String categoryName) {
 		this(entity);

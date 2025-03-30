@@ -1,6 +1,7 @@
 package com.shoes.webshoes.controller;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,7 @@ import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.entity.Brand;
 import com.shoes.webshoes.entity.Category;
+import com.shoes.webshoes.entity.Image;
 import com.shoes.webshoes.entity.Product;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDProductRequest;
@@ -31,6 +33,7 @@ import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.ProductResponse;
 import com.shoes.webshoes.service.BrandService;
 import com.shoes.webshoes.service.CategoryService;
+import com.shoes.webshoes.service.ImageService;
 import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
 
@@ -49,6 +52,9 @@ public class ProductController  {
 
 	@Autowired
 	public FirebaseImageService iFirebaseImageService;
+	
+	@Autowired
+	ImageService imageService;
 
 
     @GetMapping("")
@@ -209,10 +215,16 @@ public class ProductController  {
 			response.setMessageError(StringErrorValue.PRODUCT_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
+		
 
 		String fileName = iFirebaseImageService.save(file);
 
 		String imageUrl = iFirebaseImageService.getImageUrl(fileName);
+		
+		Image image = new Image();
+		image.setUrl(imageUrl);
+		image.setProductId(id);
+		imageService.create(image);
 
 		product.setImageUrl(imageUrl);
 		productService.update(product);
@@ -221,5 +233,51 @@ public class ProductController  {
 		
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@PostMapping("/{id}/images")
+	public ResponseEntity<BaseResponse<List<ProductResponse>>> uploadMultipleImages(
+	        @RequestParam(name = "files") List<MultipartFile> files,
+	        @PathVariable("id") int id) throws Exception {
+
+	    BaseResponse<List<ProductResponse>> response = new BaseResponse<>();
+	    Product product = productService.findOne(id);
+
+	    if (product == null) {
+	        response.setStatus(HttpStatus.BAD_REQUEST);
+	        response.setMessageError(StringErrorValue.PRODUCT_NOT_FOUND);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
+
+	    List<Image> images = new ArrayList<>();
+	    for (MultipartFile file : files) {
+	        // Lưu từng ảnh vào Firebase
+	        String fileName = iFirebaseImageService.save(file);
+	        String imageUrl = iFirebaseImageService.getImageUrl(fileName);
+
+	        // Tạo đối tượng Image và lưu vào DB
+	        Image image = new Image();
+	        image.setUrl(imageUrl);
+	        image.setProductId(id);
+	        imageService.create(image);
+	        images.add(image);
+	    }
+
+	    // Cập nhật lại ảnh chính của sản phẩm (ảnh đầu tiên được tải lên sẽ là ảnh chính)
+	    if (!images.isEmpty()) {
+	        product.setImageUrl(images.get(0).getUrl());
+	        productService.update(product);
+	    }
+
+	    // Trả về dữ liệu sản phẩm cùng với các ảnh đã tải lên
+	    List<ProductResponse> productResponses = images.stream()
+	            .map(image -> new ProductResponse(product))
+	            .collect(Collectors.toList());
+
+	    response.setData(productResponses);
+	    return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 
 }

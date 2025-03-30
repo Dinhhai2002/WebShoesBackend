@@ -1,5 +1,7 @@
 package com.shoes.webshoes.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,11 @@ public class ImageServiceImpl implements ImageService {
 	public void delete(Image image) {
 		imageDao.delete(image);
 		
+	}
+
+	@Override
+	public List<Image> findByProductId(int productId) throws Exception {
+		return imageDao.findByProductId(productId);
 	}
 
 }

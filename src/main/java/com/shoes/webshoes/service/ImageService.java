@@ -1,5 +1,7 @@
 package com.shoes.webshoes.service;
 
+import java.util.List;
+
 import com.shoes.webshoes.entity.Image;
 
 public interface ImageService {
@@ -11,4 +13,5 @@ public interface ImageService {
 	
 	void delete(Image image) ;
 
+	List<Image> findByProductId(int productId) throws Exception;
 }

@@ -1,8 +1,10 @@
 package com.shoes.webshoes.controller;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -33,7 +35,9 @@ import com.shoes.webshoes.entity.Users;
 import com.shoes.webshoes.entity.Size;
 import com.shoes.webshoes.entity.Materials;
 import com.shoes.webshoes.entity.Color;
+import com.shoes.webshoes.entity.Image;
 import com.shoes.webshoes.entity.ProductDetail;
+import com.shoes.webshoes.entity.Review;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDUserRequest;
 import com.shoes.webshoes.request.ConfirmOtpRequest;
@@ -49,6 +53,7 @@ import com.shoes.webshoes.response.BrandResponse;
 import com.shoes.webshoes.response.CategoryResponse;
 import com.shoes.webshoes.response.JwtResponse;
 import com.shoes.webshoes.response.ProductResponse;
+import com.shoes.webshoes.response.ReviewResponse;
 import com.shoes.webshoes.response.UserResponse;
 import com.shoes.webshoes.response.SizeResponse;
 import com.shoes.webshoes.response.MaterialsResponse;
@@ -59,10 +64,12 @@ import com.shoes.webshoes.service.BrandService;
 import com.shoes.webshoes.service.CartService;
 import com.shoes.webshoes.service.CategoryService;
 import com.shoes.webshoes.service.ProductService;
+import com.shoes.webshoes.service.ReviewService;
 import com.shoes.webshoes.service.UserRegisterService;
 import com.shoes.webshoes.service.SizeService;
 import com.shoes.webshoes.service.MaterialsService;
 import com.shoes.webshoes.service.ColorService;
+import com.shoes.webshoes.service.ImageService;
 import com.shoes.webshoes.service.ProductDetailService;
 
 
@@ -98,6 +105,12 @@ public class JwtAuthenticationController extends BaseController {
     
     @Autowired
     private ProductDetailService productDetailService;
+    
+    @Autowired
+    ReviewService reviewService;
+    
+    @Autowired
+    ImageService imageService;
     
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<JwtResponse>> createAuthenticationToken(@RequestBody JwtRequest wrapper)
@@ -548,8 +561,39 @@ public class JwtAuthenticationController extends BaseController {
             response.setMessageError(StringErrorValue.PRODUCT_NOT_FOUND);
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
-        response.setData(new ProductResponse(product));
+        List<Image> images = imageService.findByProductId(id);
+        List<String> imageUrls = images.stream().map(Image::getUrl).collect(Collectors.toList());
+        response.setData(new ProductResponse(product, imageUrls));
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
+    @GetMapping("/reviews")
+    public ResponseEntity<BaseResponse<BaseListDataResponse<ReviewResponse>>> getAll(
+            @RequestParam(name = "user_id", required = false, defaultValue = "-1") int userId,
+            @RequestParam(name = "product_id", required = false, defaultValue = "-1") int productId,
+            @RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
+            @RequestParam(name = "status", required = false, defaultValue = "-1") int status,
+            @RequestParam(name = "page", required = false, defaultValue = "1") int page,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
+        BaseResponse<BaseListDataResponse<ReviewResponse>> response = new BaseResponse<>();
+        Pagination pagination = new Pagination(page, limit);
+        StoreProcedureListResult<Review> listReview = reviewService.spGListReview(userId, productId, keySearch, status, pagination);
+
+        // Lấy danh sách user IDs từ reviews
+        List<Integer> userIds = listReview.getResult().stream()
+            .map(Review::getUserId)
+            .distinct()
+            .collect(Collectors.toList());
+
+        // Lấy thông tin users
+        List<Users> users = userService.findByIds(userIds);
+
+        BaseListDataResponse<ReviewResponse> listData = new BaseListDataResponse<>();
+        listData.setList(new ReviewResponse().mapToList(listReview.getResult(), users));
+        listData.setTotalRecord(listReview.getTotalRecord());
+
+        response.setData(listData);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

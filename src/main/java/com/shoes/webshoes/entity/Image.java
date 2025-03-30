@@ -27,10 +27,7 @@ public class Image extends BaseEntity {
 
 	private String url;
 
-	@Column(name = "user_id")
-	private int userId;
-
-	@Column(name = "course_id")
-	private int courseId;
+	@Column(name = "product_id")
+	private int productId;
 
 }

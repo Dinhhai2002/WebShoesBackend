@@ -1,5 +1,8 @@
 package com.shoes.webshoes.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +68,7 @@ public class ProductDetailController  {
 
 	@Autowired
 	private CategoryService categoryService;
+	
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -132,13 +136,13 @@ public class ProductDetailController  {
 			@Valid @RequestBody CRUDProductDetailRequest wrapper) throws Exception {
 
 		BaseResponse<ProductDetailResponse> response = new BaseResponse<>();
-		ProductDetail productDetailCheck = productDetailService.findByName(wrapper.getName());
-
-		if (productDetailCheck != null) {
-			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_IS_EXIST);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+//		ProductDetail productDetailCheck = productDetailService.findByName(wrapper.getName());
+//
+//		if (productDetailCheck != null) {
+//			response.setStatus(HttpStatus.BAD_REQUEST);
+//			response.setMessageError(StringErrorValue.PRODUCT_DETAIL_IS_EXIST);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
 
 		Product product = productService.findOne(wrapper.getProductId());
 
@@ -207,6 +211,87 @@ public class ProductDetailController  {
 		response.setData(new ProductDetailResponse(productDetail));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+	
+	@PostMapping("/create-multiple")
+	public ResponseEntity<BaseResponse<List<ProductDetailResponse>>> createMultiple(
+	        @Valid @RequestBody List<CRUDProductDetailRequest> productDetailsRequest) throws Exception {
+
+	    BaseResponse<List<ProductDetailResponse>> response = new BaseResponse<>();
+	    List<ProductDetailResponse> productDetailResponses = new ArrayList<>();
+
+	    // Lặp qua từng sản phẩm trong danh sách
+	    for (CRUDProductDetailRequest wrapper : productDetailsRequest) {
+
+	        // Kiểm tra các thông tin liên quan
+	        Product product = productService.findOne(wrapper.getProductId());
+	        if (product == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.PRODUCT_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        Color color = colorService.findOne(wrapper.getColorId());
+	        if (color == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.COLOR_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        Size size = sizeService.findOne(wrapper.getSizeId());
+	        if (size == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.SIZE_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        Materials materials = materialsService.findOne(wrapper.getMaterialId());
+	        if (materials == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.MATERIALS_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        Brand brand = brandService.findOne(wrapper.getBrandId());
+	        if (brand == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        Category category = categoryService.findOne(wrapper.getCategoryId());
+	        if (category == null) {
+	            response.setStatus(HttpStatus.BAD_REQUEST);
+	            response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        // Tạo mới sản phẩm con
+	        ProductDetail productDetail = new ProductDetail();
+	        productDetail.setName(wrapper.getName());
+	        productDetail.setProductId(wrapper.getProductId());
+	        productDetail.setColorId(color.getId());
+	        productDetail.setColor(color.getName());
+	        productDetail.setSizeId(size.getId());
+	        productDetail.setSize(size.getName());
+	        productDetail.setMaterialId(materials.getId());
+	        productDetail.setMaterial(materials.getName());
+	        productDetail.setPrice(wrapper.getPrice());
+	        productDetail.setStock(wrapper.getStock());
+	        productDetail.setStatus(1); // Sản phẩm có sẵn
+	        productDetail.setBrandId(brand.getId());
+	        productDetail.setBrand(brand.getName());
+	        productDetail.setCategoryId(category.getId());
+	        productDetail.setCategory(category.getName());
+	        productDetail.setImageUrl(product.getImageUrl());
+	        productDetailService.create(productDetail);
+	        productDetailResponses.add(new ProductDetailResponse(productDetail));
+	    }
+
+	    // Trả về danh sách các sản phẩm con đã được tạo
+	    response.setData(productDetailResponses);
+	    return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 
 	@PostMapping("/{id}/update")
 	public ResponseEntity<BaseResponse<ProductDetailResponse>> update(@PathVariable("id") int id,

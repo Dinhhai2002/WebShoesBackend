@@ -241,7 +241,7 @@ public class VoucherController extends BaseController {
 				&& Utils.isEmpty(voucherApplication.getCategoryId()))) {
 			amountVoucher = calculateTotalAmountApplyVoucher(wrapper.getTotalAmount(), voucher);
 		}
-		if (!Utils.isEmpty(voucherApplication.getCategoryId())) {
+		 if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getCategoryId())) {
 			for (ProductDetail productDetail : productDetails) {
 				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
 					continue;
@@ -258,7 +258,7 @@ public class VoucherController extends BaseController {
 				}
 			}
 		}
-		if (!Utils.isEmpty(voucherApplication.getBrandId())) {
+		 if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getBrandId())) {
 			for (ProductDetail productDetail : productDetails) {
 				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
 					continue;
@@ -274,7 +274,7 @@ public class VoucherController extends BaseController {
 				}
 			}
 		}
-		if (!Utils.isEmpty(voucherApplication.getProductId())) {
+		if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getProductId())) {
 			for (ProductDetail productDetail : productDetails) {
 				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
 					continue;

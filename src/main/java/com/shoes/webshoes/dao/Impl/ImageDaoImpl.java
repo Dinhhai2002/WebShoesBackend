@@ -1,5 +1,7 @@
 package com.shoes.webshoes.dao.Impl;
 
+import java.util.List;
+
 import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Repository;
@@ -33,6 +35,12 @@ public class ImageDaoImpl extends AbstractDao<Integer, Image> implements ImageDa
 		this.getSession().save(image);
 		return  image;
 		
+	}
+
+	@Override
+	public List<Image> findByProductId(int productId) throws Exception {
+		return this.getSession().createQuery("from Image where productId = :productId", Image.class)
+				.setParameter("productId", productId).list();
 	}
 
 }

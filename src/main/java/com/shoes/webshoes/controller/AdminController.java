@@ -37,7 +37,7 @@ public class AdminController extends BaseController {
 	StatisticalService statisticalService;
 
 	@GetMapping("/statistical-overview")
-	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@PreAuthorize("hasAnyAuthority('ADMIN','STAFF')")
 	public ResponseEntity<BaseResponse<WebsiteStatisticalResponse>> getWebsiteStats() throws Exception {
 	    BaseResponse<WebsiteStatisticalResponse> response = new BaseResponse<>();
 
@@ -59,7 +59,7 @@ public class AdminController extends BaseController {
 	}
 	
 	@GetMapping("/amount")
-	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@PreAuthorize("hasAnyAuthority('ADMIN','STAFF')")
 	public ResponseEntity<BaseResponse<List<Object>>> amount(
 			@RequestParam(name = "number_week", required = false, defaultValue = "") int numberWeek,
 			@RequestParam(name = "from_date", required = false, defaultValue = "-1") String fromDate,

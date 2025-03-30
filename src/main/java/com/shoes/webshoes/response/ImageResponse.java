@@ -11,8 +11,8 @@ public class ImageResponse {
 
 	private String url;
 
-	@JsonProperty("user_id")
-	private int userId;
+	@JsonProperty("product_id")
+	private int productId;
 
 	public ImageResponse() {
 
@@ -21,6 +21,6 @@ public class ImageResponse {
 	public ImageResponse(Image entity) {
 		this.id = entity.getId();
 		this.url = entity.getUrl();
-		this.userId = entity.getUserId();
+		this.productId = entity.getProductId();
 	}
 }
