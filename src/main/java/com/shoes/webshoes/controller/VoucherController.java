@@ -46,12 +46,161 @@ import com.shoes.webshoes.service.ProductDetailService;
 import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.VoucherApplicationService;
 import com.shoes.webshoes.service.VoucherService;
+import com.shoes.webshoes.response.VoucherResponse;
+import com.shoes.webshoes.request.AppyVoucherRequest;
+import com.shoes.webshoes.entity.Product;
 
 @RestController
 @RequestMapping("/api/v1/voucher")
 public class VoucherController extends BaseController {
 	@Autowired
 	public VoucherService voucherService;
+
+	@GetMapping("/best-voucher")
+	public ResponseEntity<BaseResponse<VoucherApplyResponse>> getBestVoucher() throws Exception {
+		BaseResponse<VoucherApplyResponse> response = new BaseResponse<>();
+		Users users = this.getUser();
+
+		Cart cart = cartService.spGListCart(users.getId(), "", -1, new Pagination(0, 20)).getResult().stream()
+				.findFirst().orElse(null);
+		if (cart == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError("Cart not found");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		List<CartDetail> listCartDetail = cartDetailService
+				.spGListCartDetail(cart.getId(), -1, "", 1, new Pagination(0, 20)).getResult();
+		if (listCartDetail.isEmpty()) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError("Cart is empty");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		Map<Integer, CartDetail> cartDetailMap = new HashMap<>();
+		for (CartDetail cartDetail : listCartDetail) {
+			cartDetailMap.put(cartDetail.getProductDetailId(), cartDetail);
+		}
+
+		Set<Integer> listProductDetailIds = listCartDetail.stream().map(item -> item.getProductDetailId())
+				.collect(Collectors.toSet());
+
+		List<ProductDetail> productDetails = productDetailService.findByIds(new ArrayList<>(listProductDetailIds));
+		Map<Integer, ProductDetail> productDetailMap = new HashMap<>();
+		for (ProductDetail productDetail : productDetails) {
+			productDetailMap.put(productDetail.getId(), productDetail);
+		}
+
+		BigDecimal totalAmount = listCartDetail.stream().map(cartDetail -> {
+			ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
+			if (productDetail != null) {
+				return productDetail.getPrice().multiply(BigDecimal.valueOf(cartDetail.getQuantity()));
+			}
+			return BigDecimal.ZERO;
+		}).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		List<Voucher> availableVouchers = voucherService.getAll().stream().filter(Voucher::isCurrentDateInRange)
+				.filter(voucher -> !voucher.isNumberLimit())
+				.filter(voucher -> totalAmount.compareTo(voucher.getMinOrderValue()) >= 0).collect(Collectors.toList());
+
+		BigDecimal bestDiscountAmount = BigDecimal.ZERO;
+		Voucher bestVoucher = null;
+		VoucherResponse bestVoucherResponse = null;
+
+		for (Voucher voucher : availableVouchers) {
+			BigDecimal amountVoucher = BigDecimal.ZERO;
+			VoucherApplication voucherApplication = voucherApplicationService
+					.spGListVoucherApplication(voucher.getId(), -1, -1, -1, "", 1, new Pagination(0, 20)).getResult()
+					.stream().findFirst().orElse(null);
+			Set<Integer> listProductIdsApplyVoucher = new HashSet<>();
+			List<Product> products = productService.getAll();
+			Map<Integer, Product> productMap = new HashMap<>();
+			for (Product product : products) {
+				productMap.put(product.getId(), product);
+			}
+			if (voucherApplication == null || (Utils.isEmpty(voucherApplication.getProductId())
+					&& Utils.isEmpty(voucherApplication.getBrandId())
+					&& Utils.isEmpty(voucherApplication.getCategoryId()))) {
+				amountVoucher = calculateTotalAmountApplyVoucher(totalAmount, voucher);
+			} else {
+				amountVoucher = calculateAmountWithVoucherApplication(listCartDetail, productDetails, productDetailMap,
+						voucher, voucherApplication, listProductIdsApplyVoucher, productMap);
+			}
+
+			if (amountVoucher.compareTo(bestDiscountAmount) > 0) {
+				bestDiscountAmount = amountVoucher;
+				bestVoucher = voucher;
+				if (bestVoucher != null) {
+					bestVoucherResponse = new VoucherResponse(bestVoucher);
+				}
+			}
+		}
+
+		if (bestVoucher != null) {
+			if (bestDiscountAmount.compareTo(bestVoucher.getMaxDiscount()) > 0) {
+				bestDiscountAmount = bestVoucher.getMaxDiscount();
+			}
+		}
+
+		BigDecimal discountedTotal = totalAmount.subtract(bestDiscountAmount);
+		VoucherApplyResponse voucherApplyResponse = new VoucherApplyResponse(discountedTotal, bestDiscountAmount);
+		voucherApplyResponse.setVoucher(bestVoucherResponse);
+		response.setData(voucherApplyResponse);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	private BigDecimal calculateAmountWithVoucherApplication(List<CartDetail> listCartDetail,
+			List<ProductDetail> productDetails, Map<Integer, ProductDetail> productDetailMap, Voucher voucher,
+			VoucherApplication voucherApplication, Set<Integer> listProductIdsApplyVoucher,
+			Map<Integer, Product> productMap) {
+		BigDecimal amountVoucher = BigDecimal.ZERO;
+		if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getCategoryId())) {
+			for (CartDetail cartDetail : listCartDetail) {
+				ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
+				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
+					continue;
+				}
+				if (productDetail != null) {
+					Product product = productMap.get(productDetail.getProductId());
+					if (voucherApplication.getCategoryId().equals(product.getCategoryId())) {
+						amountVoucher = amountVoucher
+								.add(calculateTotalAmountApplyVoucher(productDetail.getPrice(), voucher));
+						listProductIdsApplyVoucher.add(productDetail.getId());
+					}
+				}
+			}
+		}
+		if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getBrandId())) {
+			for (CartDetail cartDetail : listCartDetail) {
+				ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
+				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
+					continue;
+				}
+				if (productDetail != null) {
+					Product product = productMap.get(productDetail.getProductId());
+					if (voucherApplication.getBrandId().equals(product.getBrandId())) {
+						amountVoucher = amountVoucher
+								.add(calculateTotalAmountApplyVoucher(productDetail.getPrice(), voucher));
+						listProductIdsApplyVoucher.add(productDetail.getId());
+					}
+				}
+			}
+		}
+		if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getProductId())) {
+			for (CartDetail cartDetail : listCartDetail) {
+				ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
+				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
+					continue;
+				}
+				if (productDetail != null && voucherApplication.getProductId().equals(productDetail.getProductId())) {
+					amountVoucher = amountVoucher
+							.add(calculateTotalAmountApplyVoucher(productDetail.getPrice(), voucher));
+					listProductIdsApplyVoucher.add(productDetail.getId());
+				}
+			}
+		}
+		return amountVoucher;
+	}
 
 	@Autowired
 	public VoucherApplicationService voucherApplicationService;
@@ -205,8 +354,7 @@ public class VoucherController extends BaseController {
 		Cart cart = cartService.spGListCart(users.getId(), "", -1, new Pagination(0, 20)).getResult().stream()
 				.findFirst().orElse(null);
 		List<CartDetail> listCartDetail = cartDetailService
-				.spGListCartDetail(cart.getId(),-1, "", 1, new Pagination(0, 20))
-				.getResult();
+				.spGListCartDetail(cart.getId(), -1, "", 1, new Pagination(0, 20)).getResult();
 		Map<Integer, CartDetail> cartDetailMap = new HashMap<>();
 		for (CartDetail cartDetail : listCartDetail) {
 			cartDetailMap.put(cartDetail.getProductDetailId(), cartDetail);
@@ -236,12 +384,12 @@ public class VoucherController extends BaseController {
 		VoucherApplication voucherApplication = voucherApplicationService
 				.spGListVoucherApplication(voucher.getId(), -1, -1, -1, "", 1, new Pagination(0, 20)).getResult()
 				.stream().findFirst().orElse(null);
-		if (voucherApplication == null || (Utils.isEmpty(voucherApplication.getProductId())
-				&& Utils.isEmpty(voucherApplication.getBrandId())
-				&& Utils.isEmpty(voucherApplication.getCategoryId()))) {
+		if (voucherApplication == null
+				|| (Utils.isEmpty(voucherApplication.getProductId()) && Utils.isEmpty(voucherApplication.getBrandId())
+						&& Utils.isEmpty(voucherApplication.getCategoryId()))) {
 			amountVoucher = calculateTotalAmountApplyVoucher(wrapper.getTotalAmount(), voucher);
 		}
-		 if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getCategoryId())) {
+		if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getCategoryId())) {
 			for (ProductDetail productDetail : productDetails) {
 				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
 					continue;
@@ -252,13 +400,12 @@ public class VoucherController extends BaseController {
 
 				if (voucherApplication.getCategoryId().equals(product.getCategoryId())) {
 					CartDetail cartDetailFromMap = cartDetailMap.get(Integer.valueOf(productDetail.getId()));
-					amountVoucher = amountVoucher
-							.add(calculateTotalAmountApplyVoucher(price, voucher));
+					amountVoucher = amountVoucher.add(calculateTotalAmountApplyVoucher(price, voucher));
 					listProductIdsApplyVoucher.add(Integer.valueOf(productDetail.getId()));
 				}
 			}
 		}
-		 if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getBrandId())) {
+		if (voucherApplication != null && !Utils.isEmpty(voucherApplication.getBrandId())) {
 			for (ProductDetail productDetail : productDetails) {
 				if (listProductIdsApplyVoucher.contains(productDetail.getId())) {
 					continue;
@@ -268,8 +415,7 @@ public class VoucherController extends BaseController {
 
 				if (voucherApplication.getBrandId().equals(product.getBrandId())) {
 					CartDetail cartDetailFromMap = cartDetailMap.get(Integer.valueOf(productDetail.getId()));
-					amountVoucher = amountVoucher
-							.add(calculateTotalAmountApplyVoucher(price, voucher));
+					amountVoucher = amountVoucher.add(calculateTotalAmountApplyVoucher(price, voucher));
 					listProductIdsApplyVoucher.add(Integer.valueOf(productDetail.getId()));
 				}
 			}
@@ -281,22 +427,29 @@ public class VoucherController extends BaseController {
 				}
 				Integer productId = productDetail.getProductId();
 				BigDecimal price = productDetail.getPrice();
-				// Product product = productMap.get(Integer.valueOf(productDetail.getProductId()));
+				// Product product =
+				// productMap.get(Integer.valueOf(productDetail.getProductId()));
 
 				if (voucherApplication.getProductId().equals(productId)) {
 					CartDetail cartDetailFromMap = cartDetailMap.get(Integer.valueOf(productDetail.getId()));
-					amountVoucher = amountVoucher
-							.add(calculateTotalAmountApplyVoucher(price, voucher));
+					amountVoucher = amountVoucher.add(calculateTotalAmountApplyVoucher(price, voucher));
 					listProductIdsApplyVoucher.add(Integer.valueOf(productDetail.getId()));
 				}
 			}
 		}
-		if(wrapper.getTotalAmount().compareTo(amountVoucher) <= 0 || amountVoucher.compareTo(voucher.getMaxDiscount()) >= 0) {
+		if (wrapper.getTotalAmount().compareTo(amountVoucher) <= 0
+				|| amountVoucher.compareTo(voucher.getMaxDiscount()) >= 0) {
 			amountVoucher = voucher.getMaxDiscount();
 		}
 		totalAmount = wrapper.getTotalAmount().subtract(amountVoucher);
 
-		response.setData(new VoucherApplyResponse(totalAmount,amountVoucher));
+		if (amountVoucher.equals(BigDecimal.ZERO)) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.VOUCHER_IS_NOT_APPLY);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		response.setData(new VoucherApplyResponse(totalAmount, amountVoucher, new VoucherResponse(voucher)));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

@@ -325,7 +325,8 @@ public class OrderController extends BaseController {
 		order.setPaymentMethod(wrapper.getPaymentMethod());
 		order.setPaymentStatus(PaymentStatusEnum.PENDING.getValue());
 		order.setStatus(StatusOrderEnum.PENDING.getValue());
-		
+		order.setVoucherId(wrapper.getVoucherId());
+
 		// Thêm thông tin địa chỉ giao hàng
 		order.setAddressId(shippingAddress.getId());
 		order.setShippingName(shippingAddress.getFullName());
@@ -337,8 +338,10 @@ public class OrderController extends BaseController {
 		order.setShippingCityId(shippingAddress.getCityId());
 		order.setShippingCityName(shippingAddress.getCityName());
 		order.setShippingAddress(shippingAddress.getFullAddress());
+		order.setAmountShipping(wrapper.getAmountShipping());
 
 		orderService.create(order);
+		
 
 		// Tạo order details
 		for (CartDetail cartDetail : cartDetails.getResult()) {

@@ -80,4 +80,7 @@ public class Order extends BaseEntity{
 	
 	@Column(name = "customer_phone")
 	private String customerPhone;
+
+	@Column(name = "amount_shipping")
+	private BigDecimal amountShipping;
 }

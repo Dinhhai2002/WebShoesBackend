@@ -74,6 +74,9 @@ public class OrderResponse {
 	@JsonProperty("customer_phone")
 	private String customerPhone;
 
+	@JsonProperty("amount_shipping")
+	private BigDecimal amountShipping;
+
 	public OrderResponse() {
 
 	}
@@ -100,6 +103,7 @@ public class OrderResponse {
 		this.shippingCityName = entity.getShippingCityName();
 		this.shippingAddress = entity.getShippingAddress();
 		this.customerPhone = entity.getCustomerPhone();
+		this.amountShipping = entity.getAmountShipping();
 	}
 
 	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse) {

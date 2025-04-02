@@ -1,6 +1,9 @@
 package com.shoes.webshoes.controller;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shoes.webshoes.common.enums.StatusOrderEnum;
 import com.shoes.webshoes.entity.Order;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.WebsiteStatisticalResponse;
@@ -47,11 +51,35 @@ public class AdminController extends BaseController {
 
 	    // Tổng doanh thu từ đơn hàng
 	    BigDecimal totalRevenue = orderService.getAll().stream()
+	        .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue())
 	        .map(Order::getTotalPrice)
 	        .reduce(BigDecimal.ZERO, BigDecimal::add);
+	    
+	    // Doanh thu ngày hiện tại
+        LocalDate today = LocalDate.now();
+        ZoneId defaultZoneId = ZoneId.systemDefault();
+        BigDecimal dailyRevenue = orderService.getAll().stream()
+                .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue() && order.getCreatedAt().toInstant().atZone(defaultZoneId).toLocalDate().equals(today))
+                .map(Order::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Doanh thu tháng hiện tại
+        YearMonth currentMonth = YearMonth.now();
+        BigDecimal monthlyRevenue = orderService.getAll().stream()
+                .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue() && YearMonth.from(order.getCreatedAt().toInstant().atZone(defaultZoneId)).equals(currentMonth))
+                .map(Order::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Doanh thu năm hiện tại
+        int currentYear = LocalDate.now().getYear();
+        BigDecimal yearlyRevenue = orderService.getAll().stream()
+                .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue() && order.getCreatedAt().toInstant().atZone(defaultZoneId).toLocalDate().getYear() == currentYear)
+                .map(Order::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
 	    WebsiteStatisticalResponse data = new WebsiteStatisticalResponse(
-	        totalUsers, totalRevenue, totalProducts, totalOrders
+	        totalUsers, totalRevenue, totalProducts, totalOrders,
+				dailyRevenue, monthlyRevenue, yearlyRevenue
 	    );
 	    response.setData(data);
 

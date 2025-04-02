@@ -28,9 +28,15 @@ public class CRUDOrderRequest {
 	@JsonProperty("payment_method")
 	private int paymentMethod;
 
+	@NotNull(message = "voucher_id not null")
+	@JsonProperty("voucher_id")
+	private int voucherId;
+
 	@NotNull(message = "Địa chỉ giao hàng không được để trống")
 	@JsonProperty("address_id")
 	private Integer addressId;
 
+	@Min(value = 0 , message ="amount shipping not null")
+	@JsonProperty("amount_shipping")
+	private BigDecimal amountShipping;
 }
-
