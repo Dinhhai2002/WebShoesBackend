@@ -13,6 +13,8 @@ import lombok.Data;
 public class OrderResponse {
 	private int id;
 
+	private VoucherResponse voucher;
+
 	@JsonProperty("user_id")
 	private int userId;
 
@@ -109,6 +111,11 @@ public class OrderResponse {
 	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse) {
 		this(entity);
 		this.orderDetailResponse = orderDetailResponse;
+	}
+
+	public OrderResponse(Order entity, List<OrderDetailResponse> orderDetailResponse, VoucherResponse voucher) {
+		this(entity, orderDetailResponse);
+		this.voucher = voucher;
 	}
 
 	public List<OrderResponse> mapToList(List<Order> entities) {

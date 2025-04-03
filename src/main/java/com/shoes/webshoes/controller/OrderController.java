@@ -58,12 +58,18 @@ import com.shoes.webshoes.service.CartService;
 import com.shoes.webshoes.service.OrderDetailService;
 import com.shoes.webshoes.service.OrderService;
 import com.shoes.webshoes.service.ProductDetailService;
+import com.shoes.webshoes.service.VoucherService;
+import com.shoes.webshoes.entity.Voucher;
+import com.shoes.webshoes.response.VoucherResponse;
 
 @RestController
 @RequestMapping("/api/v1/order")
 public class OrderController extends BaseController {
 	@Autowired
 	public OrderService orderService;
+
+	@Autowired
+	private VoucherService voucherService;
 
 	@Autowired
 	public OrderDetailService orderDetailService;
@@ -140,7 +146,15 @@ public class OrderController extends BaseController {
 				})
 				.collect(Collectors.toList());
 
-		response.setData(new OrderResponse(order, orderDetailsResponse));
+		VoucherResponse voucherResponse = null;
+		if (order.getVoucherId() != null) {
+			Voucher voucher = voucherService.findOne(order.getVoucherId());
+			if (voucher != null) {
+				voucherResponse = new VoucherResponse(voucher);
+			}
+		}
+
+		response.setData(new OrderResponse(order, orderDetailsResponse, voucherResponse));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
