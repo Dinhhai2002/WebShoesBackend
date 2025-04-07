@@ -40,6 +40,7 @@ import com.shoes.webshoes.entity.Order;
 import com.shoes.webshoes.entity.OrderDetail;
 import com.shoes.webshoes.entity.ProductDetail;
 import com.shoes.webshoes.entity.Users;
+import com.shoes.webshoes.entity.Voucher;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDOrderRequest;
 import com.shoes.webshoes.request.ChangePaymentStatusRequest;
@@ -51,6 +52,7 @@ import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.OrderDetailResponse;
 import com.shoes.webshoes.response.OrderResponse;
 import com.shoes.webshoes.response.ProductDetailResponse;
+import com.shoes.webshoes.response.VoucherResponse;
 import com.shoes.webshoes.security.ConfigVnpay;
 import com.shoes.webshoes.service.AddressBookService;
 import com.shoes.webshoes.service.CartDetailService;
@@ -59,8 +61,6 @@ import com.shoes.webshoes.service.OrderDetailService;
 import com.shoes.webshoes.service.OrderService;
 import com.shoes.webshoes.service.ProductDetailService;
 import com.shoes.webshoes.service.VoucherService;
-import com.shoes.webshoes.entity.Voucher;
-import com.shoes.webshoes.response.VoucherResponse;
 
 @RestController
 @RequestMapping("/api/v1/order")
@@ -96,8 +96,7 @@ public class OrderController extends BaseController {
 			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
 		BaseResponse<BaseListDataResponse<OrderResponse>> response = new BaseResponse<>();
 		Pagination pagination = new Pagination(page, limit);
-		StoreProcedureListResult<Order> listOrder = orderService.spGListOrder(userId, keySearch,
-				status, pagination);
+		StoreProcedureListResult<Order> listOrder = orderService.spGListOrder(userId, keySearch, status, pagination);
 
 		BaseListDataResponse<OrderResponse> listData = new BaseListDataResponse<>();
 
@@ -122,29 +121,22 @@ public class OrderController extends BaseController {
 
 		// Lấy danh sách OrderDetail theo orderId
 		List<OrderDetail> orderDetails = orderDetailService
-				.spGListOrderDetail(order.getId(), "", 1, new Pagination(0, 20))
-				.getResult();
+				.spGListOrderDetail(order.getId(), "", 1, new Pagination(0, 20)).getResult();
 
 		// Lấy danh sách productDetailIds
-		List<Integer> productDetailIds = orderDetails.stream()
-				.map(OrderDetail::getProductDetailId)
+		List<Integer> productDetailIds = orderDetails.stream().map(OrderDetail::getProductDetailId)
 				.collect(Collectors.toList());
 
 		// Lấy thông tin ProductDetail
 		List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
 		Map<Integer, ProductDetailResponse> productDetailMap = productDetails.stream()
-				.collect(Collectors.toMap(
-						ProductDetail::getId,
-						pd -> new ProductDetailResponse(pd)
-				));
+				.collect(Collectors.toMap(ProductDetail::getId, pd -> new ProductDetailResponse(pd)));
 
 		// Tạo response với ProductDetail được map
-		List<OrderDetailResponse> orderDetailsResponse = orderDetails.stream()
-				.map(orderDetail -> {
-					ProductDetailResponse productDetailResponse = productDetailMap.get(orderDetail.getProductDetailId());
-					return new OrderDetailResponse(orderDetail, productDetailResponse);
-				})
-				.collect(Collectors.toList());
+		List<OrderDetailResponse> orderDetailsResponse = orderDetails.stream().map(orderDetail -> {
+			ProductDetailResponse productDetailResponse = productDetailMap.get(orderDetail.getProductDetailId());
+			return new OrderDetailResponse(orderDetail, productDetailResponse);
+		}).collect(Collectors.toList());
 
 		VoucherResponse voucherResponse = null;
 		if (order.getVoucherId() != null) {
@@ -206,9 +198,10 @@ public class OrderController extends BaseController {
 		// Kiểm tra và cập nhật trạng thái thanh toán theo trạng thái đơn hàng
 		if (newStatus == StatusOrderEnum.DELIVERED.getValue()) {
 			// Nếu chuyển sang hoàn thành, đơn hàng phải được thanh toán
-			if (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue() 
-				|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue()) {
-				// Nếu là COD hoặc thanh toán tại quầy, tự động cập nhật trạng thái thanh toán thành công
+			if (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue()
+					|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue()) {
+				// Nếu là COD hoặc thanh toán tại quầy, tự động cập nhật trạng thái thanh toán
+				// thành công
 				order.setPaymentStatus(PaymentStatusEnum.PAID.getValue());
 			} else if (order.getPaymentStatus() != PaymentStatusEnum.PAID.getValue()) {
 				// Nếu không phải COD/STORE và chưa thanh toán, không cho phép hoàn thành
@@ -218,25 +211,25 @@ public class OrderController extends BaseController {
 			}
 		} else if (newStatus == StatusOrderEnum.CANCELLED.getValue()) {
 			// Nếu hủy đơn hàng, cập nhật trạng thái thanh toán thành CANCELLED
-			if (order.getPaymentStatus() == PaymentStatusEnum.PENDING.getValue() 
-				|| order.getPaymentStatus() == PaymentStatusEnum.PROCESSING.getValue()) {
+			if (order.getPaymentStatus() == PaymentStatusEnum.PENDING.getValue()
+					|| order.getPaymentStatus() == PaymentStatusEnum.PROCESSING.getValue()) {
 				order.setPaymentStatus(PaymentStatusEnum.CANCELLED.getValue());
 			}
 
 			// Hoàn lại số lượng sản phẩm nếu đã trừ stock
-			if (currentStatus == StatusOrderEnum.CONFIRMED.getValue() 
-				&& (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue() 
-				|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue())) {
+			if (currentStatus == StatusOrderEnum.CONFIRMED.getValue()
+					&& (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue()
+							|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue())) {
 				restoreProductStock(order.getId());
 			}
-			if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue() 
-				&& order.getStatus() == StatusOrderEnum.PROCESSING.getValue()) {
+			if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()
+					&& order.getStatus() == StatusOrderEnum.PROCESSING.getValue()) {
 				restoreProductStock(order.getId());
 			}
 		} else if (newStatus == StatusOrderEnum.CONFIRMED.getValue()) {
 			// Cập nhật số lượng tồn kho khi xác nhận đơn hàng COD hoặc STORE
-			if (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue() 
-				|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue()) {
+			if (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue()
+					|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue()) {
 				updateProductStock(order.getId());
 			}
 		}
@@ -253,34 +246,32 @@ public class OrderController extends BaseController {
 		// Từ PENDING có thể chuyển sang CONFIRMED, PROCESSING hoặc CANCELLED
 		if (currentStatus == StatusOrderEnum.PENDING.getValue()) {
 			return newStatus == StatusOrderEnum.CONFIRMED.getValue()
-				|| newStatus == StatusOrderEnum.PROCESSING.getValue() 
-				|| newStatus == StatusOrderEnum.CANCELLED.getValue();
+					|| newStatus == StatusOrderEnum.PROCESSING.getValue()
+					|| newStatus == StatusOrderEnum.CANCELLED.getValue();
 		}
 
 		// Từ CONFIRMED có thể chuyển sang PROCESSING hoặc CANCELLED
 		if (currentStatus == StatusOrderEnum.CONFIRMED.getValue()) {
 			return newStatus == StatusOrderEnum.PROCESSING.getValue()
-				|| newStatus == StatusOrderEnum.CANCELLED.getValue();
+					|| newStatus == StatusOrderEnum.CANCELLED.getValue();
 		}
 
 		// Từ PROCESSING chỉ có thể chuyển sang SHIPPED hoặc CANCELLED
 		if (currentStatus == StatusOrderEnum.PROCESSING.getValue()) {
-			return newStatus == StatusOrderEnum.SHIPPED.getValue() 
-				|| newStatus == StatusOrderEnum.CANCELLED.getValue();
+			return newStatus == StatusOrderEnum.SHIPPED.getValue() || newStatus == StatusOrderEnum.CANCELLED.getValue();
 		}
 
 		// Từ SHIPPED chỉ có thể chuyển sang DELIVERED hoặc CANCELLED
 		if (currentStatus == StatusOrderEnum.SHIPPED.getValue()) {
-			return newStatus == StatusOrderEnum.DELIVERED.getValue() 
-				|| newStatus == StatusOrderEnum.CANCELLED.getValue();
+			return newStatus == StatusOrderEnum.DELIVERED.getValue()
+					|| newStatus == StatusOrderEnum.CANCELLED.getValue();
 		}
 
 		return false;
 	}
 
 	@PostMapping("/create")
-	public ResponseEntity<BaseResponse> create(
-			@Valid @RequestBody CRUDOrderRequest wrapper) throws Exception {
+	public ResponseEntity<BaseResponse> create(@Valid @RequestBody CRUDOrderRequest wrapper) throws Exception {
 		BaseResponse response = new BaseResponse<>();
 		Users currentUser = this.getUser();
 
@@ -293,17 +284,17 @@ public class OrderController extends BaseController {
 		}
 
 		// Lấy cart và cart details của user
-		StoreProcedureListResult<Cart> userCart = cartService.spGListCart(currentUser.getId(), "", 1, new Pagination(0, 1));
+		StoreProcedureListResult<Cart> userCart = cartService.spGListCart(currentUser.getId(), "", 1,
+				new Pagination(0, 1));
 		if (userCart.getResult().isEmpty()) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CART_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-		
+
 		Cart cart = userCart.getResult().get(0);
-		StoreProcedureListResult<CartDetail> cartDetails = cartDetailService.spGListCartDetail(
-			cart.getId(), -1, "", 1, new Pagination(0, 100)
-		);
+		StoreProcedureListResult<CartDetail> cartDetails = cartDetailService.spGListCartDetail(cart.getId(), -1, "", 1,
+				new Pagination(0, 100));
 
 		if (cartDetails.getResult().isEmpty()) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
@@ -312,20 +303,20 @@ public class OrderController extends BaseController {
 		}
 
 		// Kiểm tra stock của sản phẩm
-		List<Integer> productDetailIds = cartDetails.getResult().stream()
-			.map(CartDetail::getProductDetailId)
-			.collect(Collectors.toList());
+		List<Integer> productDetailIds = cartDetails.getResult().stream().map(CartDetail::getProductDetailId)
+				.collect(Collectors.toList());
 
 		List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
 		Map<Integer, ProductDetail> productDetailMap = productDetails.stream()
-			.collect(Collectors.toMap(ProductDetail::getId, pd -> pd));
+				.collect(Collectors.toMap(ProductDetail::getId, pd -> pd));
 
 		// Kiểm tra số lượng tồn kho
 		for (CartDetail cartDetail : cartDetails.getResult()) {
 			ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
 			if (productDetail != null && cartDetail.getQuantity() > productDetail.getStock()) {
 				response.setStatus(HttpStatus.BAD_REQUEST);
-				response.setMessageError("Sản phẩm " + productDetail.getName() + " vượt quá số lượng tồn kho. Số lượng tồn: " + productDetail.getStock());
+				response.setMessageError("Sản phẩm " + productDetail.getName()
+						+ " vượt quá số lượng tồn kho. Số lượng tồn: " + productDetail.getStock());
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
@@ -339,7 +330,37 @@ public class OrderController extends BaseController {
 		order.setPaymentMethod(wrapper.getPaymentMethod());
 		order.setPaymentStatus(PaymentStatusEnum.PENDING.getValue());
 		order.setStatus(StatusOrderEnum.PENDING.getValue());
-		order.setVoucherId(wrapper.getVoucherId());
+
+		// Kiểm tra voucher nếu có
+		if (wrapper.getVoucherId() > 0) {
+			Voucher voucher = voucherService.findOne(wrapper.getVoucherId());
+
+			if (voucher == null) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError(StringErrorValue.VOUCHER_NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+
+			// Kiểm tra điều kiện voucher
+			if (!voucher.isCurrentDateInRange() || voucher.isNumberLimit()
+					|| wrapper.getTotalPrice().compareTo(voucher.getMinOrderValue()) < 0) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError(StringErrorValue.VOUCHER_IS_NOT_APPLY);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+
+			// Cập nhật số lần sử dụng voucher
+			voucher.setUsedCount(voucher.getUsedCount() + 1);
+			voucherService.update(voucher);
+
+			// Áp dụng giảm giá vào đơn hàng
+
+			order.setVoucherId(wrapper.getVoucherId());
+		} else {
+			order.setVoucherId(0);
+		}
+		order.setDiscountAmount(wrapper.getDiscountAmount());
+		order.setTotalPrice(wrapper.getTotalPrice());
 
 		// Thêm thông tin địa chỉ giao hàng
 		order.setAddressId(shippingAddress.getId());
@@ -355,7 +376,6 @@ public class OrderController extends BaseController {
 		order.setAmountShipping(wrapper.getAmountShipping());
 
 		orderService.create(order);
-		
 
 		// Tạo order details
 		for (CartDetail cartDetail : cartDetails.getResult()) {
@@ -363,17 +383,17 @@ public class OrderController extends BaseController {
 			orderDetail.setOrderId(order.getId());
 			orderDetail.setProductDetailId(cartDetail.getProductDetailId());
 			orderDetail.setQuantity(cartDetail.getQuantity());
-			
+
 			ProductDetail productDetail = productDetailMap.get(cartDetail.getProductDetailId());
 			if (productDetail != null) {
 				orderDetail.setPrice(productDetail.getPrice());
 				BigDecimal totalPrice = productDetail.getPrice().multiply(new BigDecimal(cartDetail.getQuantity()));
 				orderDetail.setTotalPrice(totalPrice);
 			}
-			
+
 			orderDetail.setStatus(1);
 			orderDetailService.create(orderDetail);
-			
+
 			// Xóa cart detail
 			cartDetailService.delete(cartDetail.getId());
 		}
@@ -389,88 +409,85 @@ public class OrderController extends BaseController {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	
+
 	@PostMapping("/create-by-staff")
-	public ResponseEntity<BaseResponse> createByStaff(
-	        @Valid @RequestBody StaffOrderRequest request) throws Exception {
-	    
-	    BaseResponse response = new BaseResponse<>();
-	    Users currentUser = this.getUser(); // Nhân viên tạo đơn
+	public ResponseEntity<BaseResponse> createByStaff(@Valid @RequestBody StaffOrderRequest request) throws Exception {
 
-	    // Kiểm tra địa chỉ giao hàng
-	    AddressBook shippingAddress = addressBookService.findOne(request.getAddressId());
-	    if (shippingAddress == null || shippingAddress.getUserId() != currentUser.getId()) {
-	        response.setStatus(HttpStatus.BAD_REQUEST);
-	        response.setMessageError(StringErrorValue.ADDRESS_NOT_FOUND);
-	        return new ResponseEntity<>(response, HttpStatus.OK);
-	    }
+		BaseResponse response = new BaseResponse<>();
+		Users currentUser = this.getUser(); // Nhân viên tạo đơn
 
-	    // Lấy danh sách sản phẩm từ request
-	    List<Integer> productDetailIds = request.getProducts().stream()
-	            .map(StaffOrderProductRequest::getProductDetailId)
-	            .collect(Collectors.toList());
+		// Kiểm tra địa chỉ giao hàng
+		AddressBook shippingAddress = addressBookService.findOne(request.getAddressId());
+		if (shippingAddress == null || shippingAddress.getUserId() != currentUser.getId()) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.ADDRESS_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 
-	    List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
-	    Map<Integer, ProductDetail> productDetailMap = productDetails.stream()
-	            .collect(Collectors.toMap(ProductDetail::getId, pd -> pd));
+		// Lấy danh sách sản phẩm từ request
+		List<Integer> productDetailIds = request.getProducts().stream()
+				.map(StaffOrderProductRequest::getProductDetailId).collect(Collectors.toList());
 
-	    // Kiểm tra tồn kho
-	    for (StaffOrderProductRequest item : request.getProducts()) {
-	        ProductDetail pd = productDetailMap.get(item.getProductDetailId());
-	        if (pd == null || item.getQuantity() > pd.getStock()) {
-	            response.setStatus(HttpStatus.BAD_REQUEST);
-	            response.setMessageError("Sản phẩm " + (pd != null ? pd.getName() : "không xác định") +
-	                    " vượt quá số lượng tồn kho.");
-	            return new ResponseEntity<>(response, HttpStatus.OK);
-	        }
-	    }
+		List<ProductDetail> productDetails = productDetailService.findByIds(productDetailIds);
+		Map<Integer, ProductDetail> productDetailMap = productDetails.stream()
+				.collect(Collectors.toMap(ProductDetail::getId, pd -> pd));
 
-	    // Tạo đơn hàng
-	    Order order = new Order();
-	    order.setUserId(currentUser.getId());
-	    order.setPrice(request.getPrice());
-	    order.setDiscountAmount(request.getDiscountAmount());
-	    order.setTotalPrice(request.getTotalPrice());
-	    order.setPaymentMethod(request.getPaymentMethod());
-	    order.setPaymentStatus(PaymentStatusEnum.PAID.getValue());
-	    order.setStatus(StatusOrderEnum.DELIVERED.getValue());
-	    order.setCustomerPhone(request.getCustomerPhone());
+		// Kiểm tra tồn kho
+		for (StaffOrderProductRequest item : request.getProducts()) {
+			ProductDetail pd = productDetailMap.get(item.getProductDetailId());
+			if (pd == null || item.getQuantity() > pd.getStock()) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError(
+						"Sản phẩm " + (pd != null ? pd.getName() : "không xác định") + " vượt quá số lượng tồn kho.");
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+		}
 
-	    // Gán địa chỉ giao hàng
-	    order.setAddressId(shippingAddress.getId());
-	    order.setShippingName(shippingAddress.getFullName());
-	    order.setShippingPhone(shippingAddress.getPhone());
-	    order.setShippingWardId(shippingAddress.getWardId());
-	    order.setShippingWardName(shippingAddress.getWardName());
-	    order.setShippingDistrictId(shippingAddress.getDistrictId());
-	    order.setShippingDistrictName(shippingAddress.getDistrictName());
-	    order.setShippingCityId(shippingAddress.getCityId());
-	    order.setShippingCityName(shippingAddress.getCityName());
-	    order.setShippingAddress(shippingAddress.getFullAddress());
+		// Tạo đơn hàng
+		Order order = new Order();
+		order.setUserId(currentUser.getId());
+		order.setPrice(request.getPrice());
+		order.setDiscountAmount(request.getDiscountAmount());
+		order.setTotalPrice(request.getTotalPrice());
+		order.setPaymentMethod(request.getPaymentMethod());
+		order.setPaymentStatus(PaymentStatusEnum.PAID.getValue());
+		order.setStatus(StatusOrderEnum.DELIVERED.getValue());
+		order.setCustomerPhone(request.getCustomerPhone());
 
-	    orderService.create(order);
+		// Gán địa chỉ giao hàng
+		order.setAddressId(shippingAddress.getId());
+		order.setShippingName(shippingAddress.getFullName());
+		order.setShippingPhone(shippingAddress.getPhone());
+		order.setShippingWardId(shippingAddress.getWardId());
+		order.setShippingWardName(shippingAddress.getWardName());
+		order.setShippingDistrictId(shippingAddress.getDistrictId());
+		order.setShippingDistrictName(shippingAddress.getDistrictName());
+		order.setShippingCityId(shippingAddress.getCityId());
+		order.setShippingCityName(shippingAddress.getCityName());
+		order.setShippingAddress(shippingAddress.getFullAddress());
 
-	    // Tạo order detail
-	    for (StaffOrderProductRequest item : request.getProducts()) {
-	        ProductDetail pd = productDetailMap.get(item.getProductDetailId());
+		orderService.create(order);
 
-	        OrderDetail orderDetail = new OrderDetail();
-	        orderDetail.setOrderId(order.getId());
-	        orderDetail.setProductDetailId(item.getProductDetailId());
-	        orderDetail.setQuantity(item.getQuantity());
-	        orderDetail.setPrice(pd.getPrice());
-	        orderDetail.setTotalPrice(pd.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-	        orderDetail.setStatus(1);
-	        orderDetailService.create(orderDetail);
-	    }
+		// Tạo order detail
+		for (StaffOrderProductRequest item : request.getProducts()) {
+			ProductDetail pd = productDetailMap.get(item.getProductDetailId());
 
-	    // ⚠️ Trừ tồn kho ngay vì là mua tại quầy
-	    updateProductStock(order.getId());
+			OrderDetail orderDetail = new OrderDetail();
+			orderDetail.setOrderId(order.getId());
+			orderDetail.setProductDetailId(item.getProductDetailId());
+			orderDetail.setQuantity(item.getQuantity());
+			orderDetail.setPrice(pd.getPrice());
+			orderDetail.setTotalPrice(pd.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+			orderDetail.setStatus(1);
+			orderDetailService.create(orderDetail);
+		}
 
-	    response.setData(new OrderResponse(order));
-	    return new ResponseEntity<>(response, HttpStatus.OK);
+		// ⚠️ Trừ tồn kho ngay vì là mua tại quầy
+		updateProductStock(order.getId());
+
+		response.setData(new OrderResponse(order));
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-
 
 	@PostMapping("/{id}/update")
 	public ResponseEntity<BaseResponse<OrderResponse>> update(@PathVariable("id") int id,
@@ -533,8 +550,7 @@ public class OrderController extends BaseController {
 
 	@PostMapping("/{id}/change-payment-status")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
-	public ResponseEntity<BaseResponse<OrderResponse>> changePaymentStatus(
-			@PathVariable("id") int id,
+	public ResponseEntity<BaseResponse<OrderResponse>> changePaymentStatus(@PathVariable("id") int id,
 			@Valid @RequestBody ChangePaymentStatusRequest wrapper) throws Exception {
 		BaseResponse<OrderResponse> response = new BaseResponse<>();
 		Order order = orderService.findOne(id);
@@ -559,31 +575,30 @@ public class OrderController extends BaseController {
 		if (wrapper.getPaymentStatus() == PaymentStatusEnum.PAID.getValue()) {
 			// Cập nhật trạng thái đơn hàng sang PROCESSING
 			order.setStatus(StatusOrderEnum.PROCESSING.getValue());
-			
+
 			// Cập nhật số lượng tồn kho cho đơn hàng VNPAY
 			if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()) {
 				updateProductStock(order.getId());
 			}
 		}
 		// Nếu thanh toán thất bại hoặc bị hủy
-		else if (wrapper.getPaymentStatus() == PaymentStatusEnum.FAILED.getValue() 
-			|| wrapper.getPaymentStatus() == PaymentStatusEnum.CANCELLED.getValue()) {
+		else if (wrapper.getPaymentStatus() == PaymentStatusEnum.FAILED.getValue()
+				|| wrapper.getPaymentStatus() == PaymentStatusEnum.CANCELLED.getValue()) {
 			// Cập nhật trạng thái đơn hàng sang CANCELLED
 			order.setStatus(StatusOrderEnum.CANCELLED.getValue());
-			
+
 			// Hoàn lại số lượng sản phẩm nếu đã trừ stock (cho VNPAY)
-			// if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue() 
-			// 	&& order.getStatus() == StatusOrderEnum.PROCESSING.getValue()) {
-			// 	restoreProductStock(order.getId());
+			// if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()
+			// && order.getStatus() == StatusOrderEnum.PROCESSING.getValue()) {
+			// restoreProductStock(order.getId());
 			// }
 		}
 
 		orderService.update(order);
-		
+
 		// Lấy thông tin chi tiết đơn hàng để trả về
 		List<OrderDetail> orderDetails = orderDetailService
-				.spGListOrderDetail(order.getId(), "", 1, new Pagination(0, 20))
-				.getResult();
+				.spGListOrderDetail(order.getId(), "", 1, new Pagination(0, 20)).getResult();
 		List<OrderDetailResponse> orderDetailsResponse = new OrderDetailResponse().mapToList(orderDetails);
 
 		response.setData(new OrderResponse(order, orderDetailsResponse));
@@ -592,8 +607,7 @@ public class OrderController extends BaseController {
 
 	// Cập nhật số lượng tồn kho sản phẩm
 	private void updateProductStock(int orderId) throws Exception {
-		List<OrderDetail> orderDetails = orderDetailService
-				.spGListOrderDetail(orderId, "", 1, new Pagination(0, 100))
+		List<OrderDetail> orderDetails = orderDetailService.spGListOrderDetail(orderId, "", 1, new Pagination(0, 100))
 				.getResult();
 
 		for (OrderDetail orderDetail : orderDetails) {
@@ -607,8 +621,7 @@ public class OrderController extends BaseController {
 
 	// Hoàn lại số lượng tồn kho sản phẩm
 	private void restoreProductStock(int orderId) throws Exception {
-		List<OrderDetail> orderDetails = orderDetailService
-				.spGListOrderDetail(orderId, "", 1, new Pagination(0, 100))
+		List<OrderDetail> orderDetails = orderDetailService.spGListOrderDetail(orderId, "", 1, new Pagination(0, 100))
 				.getResult();
 
 		for (OrderDetail orderDetail : orderDetails) {
@@ -721,21 +734,21 @@ public class OrderController extends BaseController {
 		order.setStatus(StatusOrderEnum.CANCELLED.getValue());
 
 		// Cập nhật trạng thái thanh toán
-		if (order.getPaymentStatus() == PaymentStatusEnum.PENDING.getValue() 
-			|| order.getPaymentStatus() == PaymentStatusEnum.PROCESSING.getValue()) {
+		if (order.getPaymentStatus() == PaymentStatusEnum.PENDING.getValue()
+				|| order.getPaymentStatus() == PaymentStatusEnum.PROCESSING.getValue()) {
 			order.setPaymentStatus(PaymentStatusEnum.CANCELLED.getValue());
 		}
 
 		// Hoàn lại số lượng sản phẩm nếu đã trừ stock
-		if (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue() 
-			|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue()) {
+		if (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue()
+				|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue()) {
 			// Hoàn lại stock nếu đơn hàng đã được xác nhận hoặc đang xử lý
-			if (currentStatus == StatusOrderEnum.CONFIRMED.getValue() 
-				|| currentStatus == StatusOrderEnum.PROCESSING.getValue()) {
+			if (currentStatus == StatusOrderEnum.CONFIRMED.getValue()
+					|| currentStatus == StatusOrderEnum.PROCESSING.getValue()) {
 				restoreProductStock(order.getId());
 			}
-		} else if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue() 
-			&& order.getPaymentStatus() == PaymentStatusEnum.PAID.getValue()) {
+		} else if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()
+				&& order.getPaymentStatus() == PaymentStatusEnum.PAID.getValue()) {
 			restoreProductStock(order.getId());
 		}
 
@@ -745,4 +758,11 @@ public class OrderController extends BaseController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	private BigDecimal calculateVoucherDiscount(Voucher voucher, BigDecimal totalPrice) {
+		if (voucher.getDiscountType() == 1) {
+			return voucher.getDiscountValue();
+		} else {
+			return totalPrice.multiply(BigDecimal.valueOf(voucher.getDiscountValue())).divide(BigDecimal.valueOf(100));
+		}
+	}
 }

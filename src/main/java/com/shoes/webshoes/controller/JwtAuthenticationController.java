@@ -1,6 +1,5 @@
 package com.shoes.webshoes.controller;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -13,12 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import com.shoes.webshoes.common.enums.OtpEnum;
 import com.shoes.webshoes.common.utils.HttpService;
@@ -29,15 +28,15 @@ import com.shoes.webshoes.entity.Banner;
 import com.shoes.webshoes.entity.Brand;
 import com.shoes.webshoes.entity.Cart;
 import com.shoes.webshoes.entity.Category;
-import com.shoes.webshoes.entity.Product;
-import com.shoes.webshoes.entity.UserRegister;
-import com.shoes.webshoes.entity.Users;
-import com.shoes.webshoes.entity.Size;
-import com.shoes.webshoes.entity.Materials;
 import com.shoes.webshoes.entity.Color;
 import com.shoes.webshoes.entity.Image;
+import com.shoes.webshoes.entity.Materials;
+import com.shoes.webshoes.entity.Product;
 import com.shoes.webshoes.entity.ProductDetail;
 import com.shoes.webshoes.entity.Review;
+import com.shoes.webshoes.entity.Size;
+import com.shoes.webshoes.entity.UserRegister;
+import com.shoes.webshoes.entity.Users;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDUserRequest;
 import com.shoes.webshoes.request.ConfirmOtpRequest;
@@ -51,28 +50,32 @@ import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.BrandResponse;
 import com.shoes.webshoes.response.CategoryResponse;
+import com.shoes.webshoes.response.ColorResponse;
 import com.shoes.webshoes.response.JwtResponse;
+import com.shoes.webshoes.response.MaterialsResponse;
+import com.shoes.webshoes.response.ProductDetailResponse;
 import com.shoes.webshoes.response.ProductResponse;
 import com.shoes.webshoes.response.ReviewResponse;
-import com.shoes.webshoes.response.UserResponse;
 import com.shoes.webshoes.response.SizeResponse;
-import com.shoes.webshoes.response.MaterialsResponse;
-import com.shoes.webshoes.response.ColorResponse;
-import com.shoes.webshoes.response.ProductDetailResponse;
+import com.shoes.webshoes.response.UserResponse;
 import com.shoes.webshoes.service.BannerService;
 import com.shoes.webshoes.service.BrandService;
 import com.shoes.webshoes.service.CartService;
 import com.shoes.webshoes.service.CategoryService;
-import com.shoes.webshoes.service.ProductService;
-import com.shoes.webshoes.service.ReviewService;
-import com.shoes.webshoes.service.UserRegisterService;
-import com.shoes.webshoes.service.SizeService;
-import com.shoes.webshoes.service.MaterialsService;
 import com.shoes.webshoes.service.ColorService;
 import com.shoes.webshoes.service.ImageService;
+import com.shoes.webshoes.service.MaterialsService;
 import com.shoes.webshoes.service.ProductDetailService;
+import com.shoes.webshoes.service.ProductService;
+import com.shoes.webshoes.service.ReviewService;
+import com.shoes.webshoes.service.SizeService;
+import com.shoes.webshoes.service.UserRegisterService;
 
-
+/**
+ * 
+ * @author Nguyen
+ *
+ */
 @RestController
 @RequestMapping("/api/v1/authentication")
 public class JwtAuthenticationController extends BaseController {
@@ -596,5 +599,4 @@ public class JwtAuthenticationController extends BaseController {
         response.setData(listData);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 }
