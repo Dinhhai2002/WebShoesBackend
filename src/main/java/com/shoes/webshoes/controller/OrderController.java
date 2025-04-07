@@ -758,11 +758,4 @@ public class OrderController extends BaseController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	private BigDecimal calculateVoucherDiscount(Voucher voucher, BigDecimal totalPrice) {
-		if (voucher.getDiscountType() == 1) {
-			return voucher.getDiscountValue();
-		} else {
-			return totalPrice.multiply(BigDecimal.valueOf(voucher.getDiscountValue())).divide(BigDecimal.valueOf(100));
-		}
-	}
 }
