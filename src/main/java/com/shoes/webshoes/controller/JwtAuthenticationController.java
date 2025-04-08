@@ -3,6 +3,7 @@ package com.shoes.webshoes.controller;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -546,8 +547,23 @@ public class JwtAuthenticationController extends BaseController {
         StoreProcedureListResult<ProductDetail> listProductDetail = productDetailService.spGListProductDetail(
             productId, colorId, sizeId, materialId, brandId, categoryId, keySearch, status, pagination);
 
+        // Get all product IDs from the list
+        List<Integer> productIds = listProductDetail.getResult().stream()
+            .map(ProductDetail::getProductId)
+            .distinct()
+            .collect(Collectors.toList());
+
+        // Get all products in one query
+        List<Product> products = productService.findByIds(productIds);
+
+        // Map products to a map for quick lookup
+        Map<Integer, Product> productMap = products.stream()
+            .collect(Collectors.toMap(Product::getId, p -> p));
+
         BaseListDataResponse<ProductDetailResponse> listData = new BaseListDataResponse<>();
-        listData.setList(new ProductDetailResponse().mapToList(listProductDetail.getResult()));
+        listData.setList(listProductDetail.getResult().stream()
+            .map(detail -> new ProductDetailResponse(detail, productMap.get(detail.getProductId())))
+            .collect(Collectors.toList()));
         listData.setTotalRecord(listProductDetail.getTotalRecord());
 
         response.setData(listData);

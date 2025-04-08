@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.shoes.webshoes.entity.Product;
 import com.shoes.webshoes.entity.ProductDetail;
 
 import lombok.Data;
@@ -50,6 +51,9 @@ public class ProductDetailResponse {
 
 	private int status;
 
+    @JsonProperty("product")
+    private ProductResponse product;
+
 	public ProductDetailResponse() {
 
 	}
@@ -73,6 +77,11 @@ public class ProductDetailResponse {
 		this.imageUrl = entity.getImageUrl();
 		this.status = entity.getStatus();
 	}
+
+	public ProductDetailResponse(ProductDetail entity, Product product) {
+        this(entity);
+        this.product = new ProductResponse(product);
+    }
 
 	public List<ProductDetailResponse> mapToList(List<ProductDetail> entities) {
 		return entities.stream().map(x -> new ProductDetailResponse(x)).collect(Collectors.toList());
