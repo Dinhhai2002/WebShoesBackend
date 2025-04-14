@@ -44,8 +44,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-	public StoreProcedureListResult<Order> spGListOrder(int userId, String keySearch, int status,
-			Pagination pagination) throws Exception {
-		return orderDao.spGListOrder(userId, keySearch, status, pagination);
-	}
+    public StoreProcedureListResult<Order> spGListOrder(int userId, String keySearch, int status, int paymentStatus, int paymentMethod,
+            Pagination pagination) throws Exception {
+        return orderDao.spGListOrder(userId, keySearch, status, paymentStatus, paymentMethod, pagination);
+    }
 }

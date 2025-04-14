@@ -175,6 +175,9 @@ public class BaseController {
 		} else if(voucher.getDiscountType() == DiscountTypeEnum.CASH.getValue()) {
 			amountVoucher = voucher.getDiscountValue();
 		}
+		if(amountVoucher.compareTo(voucher.getMaxDiscount()) > 0) {
+			amountVoucher = voucher.getMaxDiscount();
+		}
 		return amountVoucher;
 	}
 	

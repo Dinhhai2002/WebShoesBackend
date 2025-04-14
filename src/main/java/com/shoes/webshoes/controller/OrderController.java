@@ -87,16 +87,17 @@ public class OrderController extends BaseController {
 	public AddressBookService addressBookService;
 
 	@GetMapping("")
-	// @PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<OrderResponse>>> getAll(
 			@RequestParam(name = "user_id", required = false, defaultValue = "-1") int userId,
 			@RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
 			@RequestParam(name = "status", required = false, defaultValue = "-1") int status,
+			@RequestParam(name = "payment_status", required = false, defaultValue = "-1") int paymentStatus,
+			@RequestParam(name = "payment_method", required = false, defaultValue = "-1") int paymentMethod,
 			@RequestParam(name = "page", required = false, defaultValue = "1") int page,
 			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
 		BaseResponse<BaseListDataResponse<OrderResponse>> response = new BaseResponse<>();
 		Pagination pagination = new Pagination(page, limit);
-		StoreProcedureListResult<Order> listOrder = orderService.spGListOrder(userId, keySearch, status, pagination);
+		StoreProcedureListResult<Order> listOrder = orderService.spGListOrder(userId, keySearch, status, paymentStatus, paymentMethod, pagination);
 
 		BaseListDataResponse<OrderResponse> listData = new BaseListDataResponse<>();
 

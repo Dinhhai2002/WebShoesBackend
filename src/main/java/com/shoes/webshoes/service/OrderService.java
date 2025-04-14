@@ -14,7 +14,7 @@ public interface OrderService {
 
     List<Order> getAll();
 
-    StoreProcedureListResult<Order> spGListOrder(int userId, String keySearch,int status,Pagination pagination) throws Exception;
+    StoreProcedureListResult<Order> spGListOrder(int userId, String keySearch, int status, int paymentStatus, int paymentMethod, Pagination pagination) throws Exception;
 
     Order findByName(String name);
 }

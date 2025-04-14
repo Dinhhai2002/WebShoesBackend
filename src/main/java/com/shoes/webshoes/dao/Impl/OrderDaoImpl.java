@@ -59,12 +59,14 @@ public class OrderDaoImpl extends AbstractDao<Integer, Order> implements OrderDa
 
     @SuppressWarnings("unchecked")
 	@Override
-	public StoreProcedureListResult<Order> spGListOrder(int userId, String keySearch, int status, Pagination pagination)
+	public StoreProcedureListResult<Order> spGListOrder(int userId, String keySearch, int status, int paymentStatus, int paymentMethod, Pagination pagination)
 			throws Exception {
 		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_order", Order.class)
 				.registerStoredProcedureParameter("userId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("keySearch", String.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("status", Integer.class, ParameterMode.IN)
+				.registerStoredProcedureParameter("paymentStatus", Integer.class, ParameterMode.IN)
+				.registerStoredProcedureParameter("paymentMethod", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("_limit", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("_offset", Integer.class, ParameterMode.IN)
 
@@ -75,6 +77,8 @@ public class OrderDaoImpl extends AbstractDao<Integer, Order> implements OrderDa
 		query.setParameter("userId", userId);
 		query.setParameter("keySearch", keySearch);
 		query.setParameter("status", status);
+		query.setParameter("paymentStatus", paymentStatus);
+		query.setParameter("paymentMethod", paymentMethod);
 		query.setParameter("_limit", pagination.getLimit());
 		query.setParameter("_offset", pagination.getOffset());
 

@@ -46,15 +46,27 @@ import com.shoes.webshoes.service.ProductDetailService;
 import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.VoucherApplicationService;
 import com.shoes.webshoes.service.VoucherService;
-import com.shoes.webshoes.response.VoucherResponse;
-import com.shoes.webshoes.request.AppyVoucherRequest;
-import com.shoes.webshoes.entity.Product;
 
 @RestController
 @RequestMapping("/api/v1/voucher")
 public class VoucherController extends BaseController {
 	@Autowired
 	public VoucherService voucherService;
+	
+	@Autowired
+	public VoucherApplicationService voucherApplicationService;
+
+	@Autowired
+	public CartService cartService;
+
+	@Autowired
+	public CartDetailService cartDetailService;
+
+	@Autowired
+	public ProductDetailService productDetailService;
+
+	@Autowired
+	public ProductService productService;
 
 	@GetMapping("/best-voucher")
 	public ResponseEntity<BaseResponse<VoucherApplyResponse>> getBestVoucher() throws Exception {
@@ -127,7 +139,7 @@ public class VoucherController extends BaseController {
 						voucher, voucherApplication, listProductIdsApplyVoucher, productMap);
 			}
 
-			if (amountVoucher.compareTo(bestDiscountAmount) > 0) {
+			if (amountVoucher.compareTo(bestDiscountAmount) > 0 && amountVoucher.compareTo(totalAmount) <= 0) {					
 				bestDiscountAmount = amountVoucher;
 				bestVoucher = voucher;
 				if (bestVoucher != null) {
@@ -202,20 +214,7 @@ public class VoucherController extends BaseController {
 		return amountVoucher;
 	}
 
-	@Autowired
-	public VoucherApplicationService voucherApplicationService;
-
-	@Autowired
-	public CartService cartService;
-
-	@Autowired
-	public CartDetailService cartDetailService;
-
-	@Autowired
-	public ProductDetailService productDetailService;
-
-	@Autowired
-	public ProductService productService;
+	
 
 	@GetMapping("")
 	// @PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -437,10 +436,14 @@ public class VoucherController extends BaseController {
 				}
 			}
 		}
-		if (wrapper.getTotalAmount().compareTo(amountVoucher) <= 0
+		if (wrapper.getTotalAmount().compareTo(amountVoucher) < 0
 				|| amountVoucher.compareTo(voucher.getMaxDiscount()) >= 0) {
-			amountVoucher = voucher.getMaxDiscount();
-		}
+					if(voucher.getDiscountType() == 2 && wrapper.getTotalAmount().compareTo(amountVoucher) < 0) {
+						amountVoucher = wrapper.getTotalAmount();
+					}else{
+						amountVoucher = voucher.getMaxDiscount();
+					}
+				}
 		totalAmount = wrapper.getTotalAmount().subtract(amountVoucher);
 
 		if (amountVoucher.equals(BigDecimal.ZERO)) {
