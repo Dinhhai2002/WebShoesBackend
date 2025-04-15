@@ -218,17 +218,29 @@ public class ProductDetailController  {
 
 	    BaseResponse<List<ProductDetailResponse>> response = new BaseResponse<>();
 	    List<ProductDetailResponse> productDetailResponses = new ArrayList<>();
+	 // Kiểm tra các thông tin liên quan
+        Product product = productService.findOne(productDetailsRequest.get(0).getProductId());
+        if (product == null) {
+            response.setStatus(HttpStatus.BAD_REQUEST);
+            response.setMessageError(StringErrorValue.PRODUCT_NOT_FOUND);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        
+        Brand brand = brandService.findOne(product.getBrandId());
+        if (brand == null) {
+            response.setStatus(HttpStatus.BAD_REQUEST);
+            response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
 
+        Category category = categoryService.findOne(product.getCategoryId());
+        if (category == null) {
+            response.setStatus(HttpStatus.BAD_REQUEST);
+            response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
 	    // Lặp qua từng sản phẩm trong danh sách
 	    for (CRUDProductDetailRequest wrapper : productDetailsRequest) {
-
-	        // Kiểm tra các thông tin liên quan
-	        Product product = productService.findOne(wrapper.getProductId());
-	        if (product == null) {
-	            response.setStatus(HttpStatus.BAD_REQUEST);
-	            response.setMessageError(StringErrorValue.PRODUCT_NOT_FOUND);
-	            return new ResponseEntity<>(response, HttpStatus.OK);
-	        }
 
 	        Color color = colorService.findOne(wrapper.getColorId());
 	        if (color == null) {
@@ -251,20 +263,6 @@ public class ProductDetailController  {
 	            return new ResponseEntity<>(response, HttpStatus.OK);
 	        }
 
-	        Brand brand = brandService.findOne(wrapper.getBrandId());
-	        if (brand == null) {
-	            response.setStatus(HttpStatus.BAD_REQUEST);
-	            response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
-	            return new ResponseEntity<>(response, HttpStatus.OK);
-	        }
-
-	        Category category = categoryService.findOne(wrapper.getCategoryId());
-	        if (category == null) {
-	            response.setStatus(HttpStatus.BAD_REQUEST);
-	            response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
-	            return new ResponseEntity<>(response, HttpStatus.OK);
-	        }
-
 	        // Tạo mới sản phẩm con
 	        ProductDetail productDetail = new ProductDetail();
 	        productDetail.setName(wrapper.getName());
@@ -275,7 +273,7 @@ public class ProductDetailController  {
 	        productDetail.setSize(size.getName());
 	        productDetail.setMaterialId(materials.getId());
 	        productDetail.setMaterial(materials.getName());
-	        productDetail.setPrice(wrapper.getPrice());
+	        productDetail.setPrice(product.getPrice());
 	        productDetail.setStock(wrapper.getStock());
 	        productDetail.setStatus(1); // Sản phẩm có sẵn
 	        productDetail.setBrandId(brand.getId());
