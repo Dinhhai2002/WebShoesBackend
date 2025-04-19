@@ -50,4 +50,9 @@ public class BrandServiceImpl implements BrandService {
             Pagination pagination) throws Exception {
         return brandDao.spGListBrand(keySearch, status, pagination);
     }
+
+    @Override
+    public List<Brand> findByIds(List<Integer> ids) {
+        return brandDao.findByIds(ids);
+    }
 }

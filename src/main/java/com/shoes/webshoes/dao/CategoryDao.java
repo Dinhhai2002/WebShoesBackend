@@ -23,4 +23,6 @@ public interface CategoryDao {
     ) throws Exception;
 
 	Category findByName(String name);
+    
+    List<Category> findByIds(List<Integer> ids);
 }

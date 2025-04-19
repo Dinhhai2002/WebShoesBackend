@@ -57,6 +57,18 @@ public class MaterialsDaoImpl extends AbstractDao<Integer, Materials> implements
 		return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
     }
 
+    @Override
+    public List<Materials> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Materials> query = builder.createQuery(Materials.class);
+        Root<Materials> root = query.from(Materials.class);
+        query.select(root).where(root.get("id").in(ids));
+        return this.getSession().createQuery(query).getResultList();
+    }
+
     @SuppressWarnings("unchecked")
 	@Override
 	public StoreProcedureListResult<Materials> spGListMaterials(String keySearch, int status, Pagination pagination)

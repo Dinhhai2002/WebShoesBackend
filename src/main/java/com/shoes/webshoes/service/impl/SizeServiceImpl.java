@@ -44,6 +44,11 @@ public class SizeServiceImpl implements SizeService {
     }
 
     @Override
+    public List<Size> findByIds(List<Integer> ids) {
+        return sizeDao.findByIds(ids);
+    }
+
+    @Override
 	public StoreProcedureListResult<Size> spGListSize(String keySearch, int status,
 			Pagination pagination) throws Exception {
 		return sizeDao.spGListSize(keySearch, status, pagination);

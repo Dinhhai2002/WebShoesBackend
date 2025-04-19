@@ -60,6 +60,18 @@ public class CategoryDaoImpl extends AbstractDao<Integer, Category> implements C
 		return this.getSession().createQuery(query).getResultList();
 	}
 
+    @Override
+    public List<Category> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Category> query = builder.createQuery(Category.class);
+        Root<Category> root = query.from(Category.class);
+        query.select(root).where(root.get("id").in(ids));
+        return this.getSession().createQuery(query).getResultList();
+    }
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public StoreProcedureListResult<Category> spGListCategory(

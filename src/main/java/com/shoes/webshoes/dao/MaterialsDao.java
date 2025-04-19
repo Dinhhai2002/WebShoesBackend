@@ -17,4 +17,6 @@ public interface MaterialsDao {
     StoreProcedureListResult<Materials> spGListMaterials(String keySearch,int status,Pagination pagination) throws Exception;
 
     Materials findByName(String name);
+
+    List<Materials> findByIds(List<Integer> ids);
 }

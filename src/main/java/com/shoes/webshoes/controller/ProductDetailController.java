@@ -1,7 +1,10 @@
 package com.shoes.webshoes.controller;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -41,6 +44,7 @@ import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.SizeService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
 
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/product-detail")
@@ -176,14 +180,14 @@ public class ProductDetailController  {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Brand brand = brandService.findOne(wrapper.getBrandId());
+		Brand brand = brandService.findOne(product.getBrandId());
 		if (brand == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.BRAND_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Category category = categoryService.findOne(wrapper.getCategoryId());
+		Category category = categoryService.findOne(product.getCategoryId());
 		if (category == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
@@ -239,51 +243,64 @@ public class ProductDetailController  {
             response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
-	    // Lặp qua từng sản phẩm trong danh sách
-	    for (CRUDProductDetailRequest wrapper : productDetailsRequest) {
-
-	        Color color = colorService.findOne(wrapper.getColorId());
-	        if (color == null) {
-	            response.setStatus(HttpStatus.BAD_REQUEST);
-	            response.setMessageError(StringErrorValue.COLOR_NOT_FOUND);
-	            return new ResponseEntity<>(response, HttpStatus.OK);
-	        }
-
-	        Size size = sizeService.findOne(wrapper.getSizeId());
-	        if (size == null) {
-	            response.setStatus(HttpStatus.BAD_REQUEST);
-	            response.setMessageError(StringErrorValue.SIZE_NOT_FOUND);
-	            return new ResponseEntity<>(response, HttpStatus.OK);
-	        }
-
-	        Materials materials = materialsService.findOne(wrapper.getMaterialId());
-	        if (materials == null) {
-	            response.setStatus(HttpStatus.BAD_REQUEST);
-	            response.setMessageError(StringErrorValue.MATERIALS_NOT_FOUND);
-	            return new ResponseEntity<>(response, HttpStatus.OK);
-	        }
-
-	        // Tạo mới sản phẩm con
-	        ProductDetail productDetail = new ProductDetail();
-	        productDetail.setName(wrapper.getName());
-	        productDetail.setProductId(wrapper.getProductId());
-	        productDetail.setColorId(color.getId());
-	        productDetail.setColor(color.getName());
-	        productDetail.setSizeId(size.getId());
-	        productDetail.setSize(size.getName());
-	        productDetail.setMaterialId(materials.getId());
-	        productDetail.setMaterial(materials.getName());
-	        productDetail.setPrice(product.getPrice());
-	        productDetail.setStock(wrapper.getStock());
-	        productDetail.setStatus(1); // Sản phẩm có sẵn
-	        productDetail.setBrandId(brand.getId());
-	        productDetail.setBrand(brand.getName());
-	        productDetail.setCategoryId(category.getId());
-	        productDetail.setCategory(category.getName());
-	        productDetail.setImageUrl(product.getImageUrl());
-	        productDetailService.create(productDetail);
-	        productDetailResponses.add(new ProductDetailResponse(productDetail));
-	    }
+	    // Tối ưu: gom tất cả ID cần lấy
+        Set<Integer> colorIds = new HashSet<>();
+        Set<Integer> sizeIds = new HashSet<>();
+        Set<Integer> materialIds = new HashSet<>();
+        for (CRUDProductDetailRequest wrapper : productDetailsRequest) {
+            colorIds.add(wrapper.getColorId());
+            sizeIds.add(wrapper.getSizeId());
+            materialIds.add(wrapper.getMaterialId());
+        }
+        // Lấy 1 lần tất cả entities liên quan
+        List<Color> colorList = colorService.findByIds(new ArrayList<>(colorIds));
+        List<Size> sizeList = sizeService.findByIds(new ArrayList<>(sizeIds));
+        List<Materials> materialList = materialsService.findByIds(new ArrayList<>(materialIds));
+        // Map để tra cứu nhanh
+        Map<Integer, Color> colorMap = colorList.stream().collect(Collectors.toMap(Color::getId, c -> c));
+        Map<Integer, Size> sizeMap = sizeList.stream().collect(Collectors.toMap(Size::getId, s -> s));
+        Map<Integer, Materials> materialMap = materialList.stream().collect(Collectors.toMap(Materials::getId, m -> m));
+        // Lặp qua từng sản phẩm trong danh sách
+        for (CRUDProductDetailRequest wrapper : productDetailsRequest) {
+            Color color = colorMap.get(wrapper.getColorId());
+            if (color == null) {
+                response.setStatus(HttpStatus.BAD_REQUEST);
+                response.setMessageError(StringErrorValue.COLOR_NOT_FOUND);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            Size size = sizeMap.get(wrapper.getSizeId());
+            if (size == null) {
+                response.setStatus(HttpStatus.BAD_REQUEST);
+                response.setMessageError(StringErrorValue.SIZE_NOT_FOUND);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            Materials materials = materialMap.get(wrapper.getMaterialId());
+            if (materials == null) {
+                response.setStatus(HttpStatus.BAD_REQUEST);
+                response.setMessageError(StringErrorValue.MATERIALS_NOT_FOUND);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            // Tạo mới sản phẩm con
+            ProductDetail productDetail = new ProductDetail();
+            productDetail.setName(wrapper.getName());
+            productDetail.setProductId(wrapper.getProductId());
+            productDetail.setColorId(color.getId());
+            productDetail.setColor(color.getName());
+            productDetail.setSizeId(size.getId());
+            productDetail.setSize(size.getName());
+            productDetail.setMaterialId(materials.getId());
+            productDetail.setMaterial(materials.getName());
+            productDetail.setPrice(product.getPrice());
+            productDetail.setStock(wrapper.getStock());
+            productDetail.setStatus(1); // Sản phẩm có sẵn
+            productDetail.setBrandId(brand.getId());
+            productDetail.setBrand(brand.getName());
+            productDetail.setCategoryId(category.getId());
+            productDetail.setCategory(category.getName());
+            productDetail.setImageUrl(product.getImageUrl());
+            productDetailService.create(productDetail);
+            productDetailResponses.add(new ProductDetailResponse(productDetail));
+        }
 
 	    // Trả về danh sách các sản phẩm con đã được tạo
 	    response.setData(productDetailResponses);

@@ -17,4 +17,6 @@ public interface SizeService {
     StoreProcedureListResult<Size> spGListSize(String keySearch,int status,Pagination pagination) throws Exception;
 
     Size findByName(String name);
+
+    List<Size> findByIds(List<Integer> ids);
 }

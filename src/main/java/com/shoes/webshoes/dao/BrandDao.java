@@ -16,4 +16,5 @@ public interface BrandDao {
         Pagination pagination
     ) throws Exception;
     Brand findByName(String name);
+    List<Brand> findByIds(List<Integer> ids);
 }

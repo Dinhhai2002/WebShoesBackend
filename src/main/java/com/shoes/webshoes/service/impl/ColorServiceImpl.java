@@ -44,6 +44,11 @@ public class ColorServiceImpl implements ColorService {
     }
 
     @Override
+    public List<Color> findByIds(List<Integer> ids) {
+        return colorDao.findByIds(ids);
+    }
+
+    @Override
 	public StoreProcedureListResult<Color> spGListColor(String keySearch, int status,
 			Pagination pagination) throws Exception {
 		return colorDao.spGListColor(keySearch, status, pagination);

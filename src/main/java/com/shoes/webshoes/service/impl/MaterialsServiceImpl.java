@@ -44,6 +44,11 @@ public class MaterialsServiceImpl implements MaterialsService {
     }
 
     @Override
+    public List<Materials> findByIds(List<Integer> ids) {
+        return materialsDao.findByIds(ids);
+    }
+
+    @Override
 	public StoreProcedureListResult<Materials> spGListMaterials(String keySearch, int status,
 			Pagination pagination) throws Exception {
 		return materialsDao.spGListMaterials(keySearch, status, pagination);

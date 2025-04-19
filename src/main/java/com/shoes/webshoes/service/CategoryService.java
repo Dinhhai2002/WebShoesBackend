@@ -17,6 +17,8 @@ public interface CategoryService {
 	
 	Category findByName(String name);
 
+	List<Category> findByIds(List<Integer> ids);
+
 	StoreProcedureListResult<Category> spGListCategory(
 		int parentId,
 		String keySearch,
@@ -24,4 +26,3 @@ public interface CategoryService {
 		Pagination pagination
 	) throws Exception;
 }
-

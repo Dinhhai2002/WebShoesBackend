@@ -55,6 +55,18 @@ public class BrandDaoImpl extends AbstractDao<Integer, Brand> implements BrandDa
         return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
     }
 
+    @Override
+    public List<Brand> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Brand> query = builder.createQuery(Brand.class);
+        Root<Brand> root = query.from(Brand.class);
+        query.select(root).where(root.get("id").in(ids));
+        return this.getSession().createQuery(query).getResultList();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public StoreProcedureListResult<Brand> spGListBrand(

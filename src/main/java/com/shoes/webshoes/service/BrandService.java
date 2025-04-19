@@ -21,4 +21,6 @@ public interface BrandService {
     ) throws Exception;
 
     Brand findByName(String name);
+
+    List<Brand> findByIds(List<Integer> ids);
 }

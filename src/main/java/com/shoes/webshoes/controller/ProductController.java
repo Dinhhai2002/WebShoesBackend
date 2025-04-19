@@ -3,6 +3,7 @@ package com.shoes.webshoes.controller;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -37,7 +38,11 @@ import com.shoes.webshoes.service.ImageService;
 import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
 
-
+/**
+ * 
+ * @author Nguyen
+ *
+ */
 @RestController
 @RequestMapping("/api/v1/product")
 public class ProductController  {
@@ -70,11 +75,22 @@ public class ProductController  {
 				status, pagination);
 
 		BaseListDataResponse<ProductResponse> listData = new BaseListDataResponse<>();
-		List<ProductResponse> productResponses = listProduct.getResult().stream().map(product -> {
-			Brand brand = brandService.findOne(product.getBrandId());
-			Category category = categoryService.findOne(product.getCategoryId());
+		List<Product> products = listProduct.getResult();
+		// Lấy danh sách brandId và categoryId duy nhất
+		List<Integer> brandIds = products.stream().map(Product::getBrandId).distinct().collect(Collectors.toList());
+		List<Integer> categoryIds = products.stream().map(Product::getCategoryId).distinct().collect(Collectors.toList());
+		// Lấy danh sách brand và category
+		List<Brand> brands = brandService.findByIds(brandIds);
+		List<Category> categories = categoryService.findByIds(categoryIds);
+		// Tạo map tra cứu
+		Map<Integer, Brand> brandMap = brands.stream().collect(Collectors.toMap(Brand::getId, b -> b));
+		Map<Integer, Category> categoryMap = categories.stream().collect(Collectors.toMap(Category::getId, c -> c));
+		// Tạo list response
+		List<ProductResponse> productResponses = products.stream().map(product -> {
+			Brand brand = brandMap.get(product.getBrandId());
+			Category category = categoryMap.get(product.getCategoryId());
 			return new ProductResponse(
-				product, 
+				product,
 				brand != null ? brand.getName() : null,
 				category != null ? category.getName() : null
 			);

@@ -57,6 +57,18 @@ public class SizeDaoImpl extends AbstractDao<Integer, Size> implements SizeDao {
 		return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
     }
 
+    @Override
+    public List<Size> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Size> query = builder.createQuery(Size.class);
+        Root<Size> root = query.from(Size.class);
+        query.select(root).where(root.get("id").in(ids));
+        return this.getSession().createQuery(query).getResultList();
+    }
+
     @SuppressWarnings("unchecked")
 	@Override
 	public StoreProcedureListResult<Size> spGListSize(String keySearch, int status, Pagination pagination)

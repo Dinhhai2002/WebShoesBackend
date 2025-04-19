@@ -57,6 +57,18 @@ public class ColorDaoImpl extends AbstractDao<Integer, Color> implements ColorDa
 		return this.getSession().createQuery(query).getResultList().stream().findFirst().orElse(null);
     }
 
+    @Override
+    public List<Color> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Color> query = builder.createQuery(Color.class);
+        Root<Color> root = query.from(Color.class);
+        query.select(root).where(root.get("id").in(ids));
+        return this.getSession().createQuery(query).getResultList();
+    }
+
     @SuppressWarnings("unchecked")
 	@Override
 	public StoreProcedureListResult<Color> spGListColor(String keySearch, int status, Pagination pagination)

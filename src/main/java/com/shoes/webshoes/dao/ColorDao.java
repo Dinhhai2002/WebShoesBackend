@@ -17,4 +17,6 @@ public interface ColorDao {
     StoreProcedureListResult<Color> spGListColor(String keySearch,int status,Pagination pagination) throws Exception;
 
     Color findByName(String name);
+
+    List<Color> findByIds(List<Integer> ids);
 }

@@ -12,7 +12,11 @@ import com.shoes.webshoes.entity.Category;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.service.CategoryService;
 
-
+/**
+ * 
+ * @author 
+ *
+ */
 @Service("CategoryService")
 @Transactional(rollbackFor = Error.class)
 public class CategoryServiceImpl implements CategoryService {
@@ -52,4 +56,9 @@ public class CategoryServiceImpl implements CategoryService {
 			Pagination pagination) throws Exception {
 		return categoryDao.spGListCategory(parentId, keySearch, status, pagination);
 	}
+
+    @Override
+    public List<Category> findByIds(List<Integer> ids) {
+        return categoryDao.findByIds(ids);
+    }
 }
