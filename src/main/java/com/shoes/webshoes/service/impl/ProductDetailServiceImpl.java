@@ -69,4 +69,9 @@ public class ProductDetailServiceImpl implements ProductDetailService {
     public ProductDetail findBySku(String sku) {
         return productDetailDao.findBySku(sku);
     }
+
+    @Override
+    public ProductDetail findByBarcode(String barcode) {
+        return productDetailDao.findByBarcode(barcode);
+    }
 }

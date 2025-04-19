@@ -138,4 +138,16 @@ public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> im
             return null;
         }
     }
+
+    @Override
+    public ProductDetail findByBarcode(String barcode) {
+        try {
+            return this.getSession()
+                .createQuery("FROM ProductDetail WHERE barcode = :barcode", ProductDetail.class)
+                .setParameter("barcode", barcode)
+                .uniqueResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
