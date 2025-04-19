@@ -64,4 +64,9 @@ public class ProductDetailServiceImpl implements ProductDetailService {
     public List<ProductDetail> findByIds(List<Integer> ids) {
         return productDetailDao.findByIds(ids);
     }
+
+    @Override
+    public ProductDetail findBySku(String sku) {
+        return productDetailDao.findBySku(sku);
+    }
 }

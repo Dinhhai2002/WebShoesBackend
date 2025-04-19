@@ -210,12 +210,18 @@ public class ProductDetailController  {
 		productDetail.setBrand(brand.getName());
 		productDetail.setCategoryId(category.getId());
 		productDetail.setCategory(category.getName());
-        // Sinh SKU theo quy tắc S-productId-colorId-sizeId-materialId
+        // Kiểm tra SKU đã tồn tại chưa
         String sku = String.format("S-%d-%d-%d-%d", 
             wrapper.getProductId(), 
             wrapper.getColorId(), 
             wrapper.getSizeId(), 
             wrapper.getMaterialId());
+        ProductDetail existedBySku = productDetailService.findBySku(sku);
+        if (existedBySku != null) {
+            response.setStatus(HttpStatus.BAD_REQUEST);
+            response.setMessageError(StringErrorValue.PRODUCT_DETAIL_IS_EXIST);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
         productDetail.setSku(sku);
 
 		productDetailService.create(productDetail);
@@ -305,12 +311,18 @@ public class ProductDetailController  {
             productDetail.setCategoryId(category.getId());
             productDetail.setCategory(category.getName());
             productDetail.setImageUrl(product.getImageUrl());
-            // Sinh SKU cho từng sản phẩm chi tiết
-            String sku = String.format("S-%d-%d-%d-%d", 
-                wrapper.getProductId(), 
-                wrapper.getColorId(), 
-                wrapper.getSizeId(), 
+            // Kiểm tra SKU đã tồn tại chưa
+            String sku = String.format("S-%d-%d-%d-%d",
+                wrapper.getProductId(),
+                wrapper.getColorId(),
+                wrapper.getSizeId(),
                 wrapper.getMaterialId());
+            ProductDetail existedBySku = productDetailService.findBySku(sku);
+            if (existedBySku != null) {
+                response.setStatus(HttpStatus.BAD_REQUEST);
+                response.setMessageError("Sản phẩm đã tồn tại với SKU: " + sku + ", tên: " + existedBySku.getName() + ", màu: " + existedBySku.getColor() + ", size: " + existedBySku.getSize() + ", chất liệu: " + existedBySku.getMaterial());
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
             productDetail.setSku(sku);
             productDetailService.create(productDetail);
             productDetailResponses.add(new ProductDetailResponse(productDetail));

@@ -64,4 +64,6 @@ public class ProductDetail extends BaseEntity{
 	private int categoryId;
 
 	private String category;
+	
+	private String sku;
 }

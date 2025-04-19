@@ -29,4 +29,6 @@ public interface ProductDetailService {
     ProductDetail findByName(String name);
     
     List<ProductDetail> findByIds(List<Integer> ids);
+
+    ProductDetail findBySku(String sku);
 }

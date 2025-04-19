@@ -126,4 +126,16 @@ public class ProductDetailDaoImpl extends AbstractDao<Integer, ProductDetail> im
 
         return this.getSession().createQuery(query).getResultList();
     }
+
+    @Override
+    public ProductDetail findBySku(String sku) {
+        try {
+            return this.getSession()
+                .createQuery("FROM ProductDetail WHERE sku = :sku", ProductDetail.class)
+                .setParameter("sku", sku)
+                .uniqueResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
