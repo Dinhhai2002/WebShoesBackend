@@ -9,7 +9,7 @@ import com.shoes.webshoes.model.StoreProcedureListResult;
 public interface UserDao {
 
 	Users spUCreateUsers(String userName, String fullName, String email, String phone, String password, int gender,
-			String birthday, int wardId, int districtId, int cityId, String fullAddress) throws Exception;
+			String birthday, int wardId, int districtId, int cityId, String fullAddress, int role) throws Exception;
 
 	void create(Users user) throws Exception;
 

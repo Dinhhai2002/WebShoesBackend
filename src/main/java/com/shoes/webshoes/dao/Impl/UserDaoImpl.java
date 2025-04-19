@@ -30,7 +30,7 @@ public class UserDaoImpl extends AbstractDao<Integer, Users> implements UserDao 
 
 	@Override
 	public Users spUCreateUsers(String userName, String fullName, String email, String phone, String password,
-			int gender, String birthday, int wardId, int districtId, int cityId, String fullAddress) throws Exception {
+			int gender, String birthday, int wardId, int districtId, int cityId, String fullAddress, int role) throws Exception {
 		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_u_create_users", Users.class)
 				.registerStoredProcedureParameter("userName", String.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("fullName", String.class, ParameterMode.IN)
@@ -43,7 +43,7 @@ public class UserDaoImpl extends AbstractDao<Integer, Users> implements UserDao 
 				.registerStoredProcedureParameter("districtId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("cityId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("fullAddress", String.class, ParameterMode.IN)
-
+				.registerStoredProcedureParameter("role", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("status_code", Integer.class, ParameterMode.OUT)
 				.registerStoredProcedureParameter("message_error", String.class, ParameterMode.OUT);
 
@@ -58,6 +58,7 @@ public class UserDaoImpl extends AbstractDao<Integer, Users> implements UserDao 
 		query.setParameter("districtId", districtId);
 		query.setParameter("cityId", cityId);
 		query.setParameter("fullAddress", fullAddress);
+		query.setParameter("role", role);
 
 		int statusCode = (int) query.getOutputParameterValue("status_code");
 		String messageError = query.getOutputParameterValue("message_error").toString();

@@ -160,10 +160,20 @@ public class JwtAuthenticationController extends BaseController {
         BaseResponse<UserResponse> response = new BaseResponse<>();
         // BCrypt.hashpw(wrapper.getPassword(), BCrypt.gensalt(12))
 
-        response.setData(new UserResponse(userService.spUCreateUsers(wrapper.getUserName(), wrapper.getFullName(),
-                wrapper.getEmail(), wrapper.getPhone(), Utils.encodeBase64(wrapper.getPassword()), wrapper.getGender(),
-                wrapper.getBirthday(), wrapper.getWardId(), wrapper.getDistrictId(),
-                wrapper.getCityId(), wrapper.getFullAddress())));
+        response.setData(new UserResponse(userService.spUCreateUsers(
+                wrapper.getUserName(),
+                wrapper.getFullName(),
+                wrapper.getEmail(),
+                wrapper.getPhone(),
+                Utils.encodeBase64(wrapper.getPassword()),
+                wrapper.getGender(),
+                wrapper.getBirthday(),
+                wrapper.getWardId(),
+                wrapper.getDistrictId(),
+                wrapper.getCityId(),
+                wrapper.getFullAddress(),
+                wrapper.getRole()
+        )));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

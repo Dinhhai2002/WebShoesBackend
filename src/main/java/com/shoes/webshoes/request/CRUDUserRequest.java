@@ -69,4 +69,9 @@ public class CRUDUserRequest {
 	@JsonProperty("full_address")
 	private String fullAddress;
 
+	@Min(value = 0, message = "role nhỏ nhất 0.")
+	@Max(value = 10, message = "role lớn nhất 10.")
+	@JsonProperty("role")
+	private int role;
+
 }

@@ -52,10 +52,10 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public Users spUCreateUsers(String userName, String fullName, String email, String phone, String password,
-			int gender, String birthday, int wardId, int districtId, int cityId, String fullAddress) throws Exception {
+			int gender, String birthday, int wardId, int districtId, int cityId, String fullAddress, int role) throws Exception {
 
 		return usersDao.spUCreateUsers(userName, fullName, email, phone, password, gender, birthday, wardId, districtId,
-				cityId, fullAddress);
+				cityId, fullAddress, role);
 	}
 
 	@Override

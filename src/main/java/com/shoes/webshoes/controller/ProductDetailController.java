@@ -210,6 +210,13 @@ public class ProductDetailController  {
 		productDetail.setBrand(brand.getName());
 		productDetail.setCategoryId(category.getId());
 		productDetail.setCategory(category.getName());
+        // Sinh SKU theo quy tắc S-productId-colorId-sizeId-materialId
+        String sku = String.format("S-%d-%d-%d-%d", 
+            wrapper.getProductId(), 
+            wrapper.getColorId(), 
+            wrapper.getSizeId(), 
+            wrapper.getMaterialId());
+        productDetail.setSku(sku);
 
 		productDetailService.create(productDetail);
 		response.setData(new ProductDetailResponse(productDetail));
@@ -298,6 +305,13 @@ public class ProductDetailController  {
             productDetail.setCategoryId(category.getId());
             productDetail.setCategory(category.getName());
             productDetail.setImageUrl(product.getImageUrl());
+            // Sinh SKU cho từng sản phẩm chi tiết
+            String sku = String.format("S-%d-%d-%d-%d", 
+                wrapper.getProductId(), 
+                wrapper.getColorId(), 
+                wrapper.getSizeId(), 
+                wrapper.getMaterialId());
+            productDetail.setSku(sku);
             productDetailService.create(productDetail);
             productDetailResponses.add(new ProductDetailResponse(productDetail));
         }
