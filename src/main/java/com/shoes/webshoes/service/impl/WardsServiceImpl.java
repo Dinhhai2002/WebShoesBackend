@@ -22,4 +22,9 @@ public class WardsServiceImpl implements WardsService{
 		return wardsDao.findByDistrictId(districtId);
 	}
 
+	@Override
+	public Wards findById(int id) throws Exception {
+		return wardsDao.findById(id);
+	}
+
 }

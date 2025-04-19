@@ -22,4 +22,8 @@ public class CityServiceImpl implements CityService {
 		return cityDao.getAll();
 	}
 
+	@Override
+	public Cities findById(int id) throws Exception {
+		return cityDao.findById(id);
+	}
 }

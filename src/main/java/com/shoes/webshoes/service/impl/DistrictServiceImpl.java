@@ -23,4 +23,8 @@ public class DistrictServiceImpl implements DistrictService {
 		return districtDao.findByCityId(cityId);
 	}
 
+    @Override
+    public Districts findById(int id) throws Exception {
+        return districtDao.findById(id);
+    }
 }

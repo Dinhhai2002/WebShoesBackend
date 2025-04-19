@@ -2,8 +2,8 @@ package com.shoes.webshoes.controller;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -25,11 +25,14 @@ import com.shoes.webshoes.common.utils.HttpService;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.common.utils.Utils;
+import com.shoes.webshoes.entity.AddressBook;
 import com.shoes.webshoes.entity.Banner;
 import com.shoes.webshoes.entity.Brand;
 import com.shoes.webshoes.entity.Cart;
 import com.shoes.webshoes.entity.Category;
+import com.shoes.webshoes.entity.Cities;
 import com.shoes.webshoes.entity.Color;
+import com.shoes.webshoes.entity.Districts;
 import com.shoes.webshoes.entity.Image;
 import com.shoes.webshoes.entity.Materials;
 import com.shoes.webshoes.entity.Product;
@@ -38,6 +41,7 @@ import com.shoes.webshoes.entity.Review;
 import com.shoes.webshoes.entity.Size;
 import com.shoes.webshoes.entity.UserRegister;
 import com.shoes.webshoes.entity.Users;
+import com.shoes.webshoes.entity.Wards;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDUserRequest;
 import com.shoes.webshoes.request.ConfirmOtpRequest;
@@ -59,11 +63,14 @@ import com.shoes.webshoes.response.ProductResponse;
 import com.shoes.webshoes.response.ReviewResponse;
 import com.shoes.webshoes.response.SizeResponse;
 import com.shoes.webshoes.response.UserResponse;
+import com.shoes.webshoes.service.AddressBookService;
 import com.shoes.webshoes.service.BannerService;
 import com.shoes.webshoes.service.BrandService;
 import com.shoes.webshoes.service.CartService;
 import com.shoes.webshoes.service.CategoryService;
+import com.shoes.webshoes.service.CityService;
 import com.shoes.webshoes.service.ColorService;
+import com.shoes.webshoes.service.DistrictService;
 import com.shoes.webshoes.service.ImageService;
 import com.shoes.webshoes.service.MaterialsService;
 import com.shoes.webshoes.service.ProductDetailService;
@@ -71,6 +78,8 @@ import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.ReviewService;
 import com.shoes.webshoes.service.SizeService;
 import com.shoes.webshoes.service.UserRegisterService;
+import com.shoes.webshoes.service.UserService;
+import com.shoes.webshoes.service.WardsService;
 
 /**
  * 
@@ -116,6 +125,21 @@ public class JwtAuthenticationController extends BaseController {
     @Autowired
     ImageService imageService;
     
+    @Autowired
+    private AddressBookService addressBookService;
+    
+    @Autowired
+    private CityService cityService;
+    
+    @Autowired
+    private DistrictService districtService;
+    
+    @Autowired
+    private WardsService wardService;
+    
+    @Autowired
+    private UserService userService;
+    
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<JwtResponse>> createAuthenticationToken(@RequestBody JwtRequest wrapper)
             throws Exception {
@@ -158,9 +182,7 @@ public class JwtAuthenticationController extends BaseController {
     public ResponseEntity<BaseResponse<UserResponse>> spUCreateUser(@Valid @RequestBody CRUDUserRequest wrapper)
             throws Exception {
         BaseResponse<UserResponse> response = new BaseResponse<>();
-        // BCrypt.hashpw(wrapper.getPassword(), BCrypt.gensalt(12))
-
-        response.setData(new UserResponse(userService.spUCreateUsers(
+        Users user = userService.spUCreateUsers(
                 wrapper.getUserName(),
                 wrapper.getFullName(),
                 wrapper.getEmail(),
@@ -173,8 +195,26 @@ public class JwtAuthenticationController extends BaseController {
                 wrapper.getCityId(),
                 wrapper.getFullAddress(),
                 wrapper.getRole()
-        )));
+        );
+        Cities city = cityService.findById(user.getCityId());
+        Districts district = districtService.findById(user.getDistrictId());
+        Wards ward = wardService.findById(user.getWardId());
 
+        AddressBook addressBook = new AddressBook();
+        addressBook.setUserId(user.getId());
+        addressBook.setFullName(user.getFullName());
+        addressBook.setPhone(user.getPhone());
+        addressBook.setWardId(user.getWardId());
+        addressBook.setWardName(ward != null ? ward.getName() : null);
+        addressBook.setDistrictId(user.getDistrictId());
+        addressBook.setDistrictName(district != null ? district.getName() : null);
+        addressBook.setCityId(user.getCityId());
+        addressBook.setCityName(city != null ? city.getName() : null);
+        addressBook.setFullAddress(user.getFullAddress());
+        addressBook.setIsDefault(1);
+        addressBook.setStatus(1);
+        addressBookService.create(addressBook);
+        response.setData(new UserResponse(user));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

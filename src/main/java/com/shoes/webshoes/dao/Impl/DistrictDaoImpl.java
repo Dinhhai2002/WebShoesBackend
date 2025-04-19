@@ -7,6 +7,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.stereotype.Repository;
 
 import com.shoes.webshoes.dao.AbstractDao;
@@ -27,4 +30,8 @@ public class DistrictDaoImpl extends AbstractDao<Integer, Districts> implements 
 		return (List<Districts>) this.getSession().createQuery(query).getResultList();
 	}
 
+    @Override
+    public Districts findById(int id) throws Exception {
+    	return this.getSession().find(Districts.class, id);
+    }
 }
