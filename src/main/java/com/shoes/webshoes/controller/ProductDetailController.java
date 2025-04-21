@@ -303,7 +303,7 @@ public class ProductDetailController  {
             productDetail.setSize(size.getName());
             productDetail.setMaterialId(materials.getId());
             productDetail.setMaterial(materials.getName());
-            productDetail.setPrice(product.getPrice());
+            productDetail.setPrice(wrapper.getPrice());
             productDetail.setStock(wrapper.getStock());
             productDetail.setStatus(1); // Sản phẩm có sẵn
             productDetail.setBrandId(brand.getId());
