@@ -9,7 +9,9 @@ import java.util.Set;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.shoes.webshoes.common.utils.BarcodeUtil;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.entity.Brand;
@@ -223,6 +226,16 @@ public class ProductDetailController  {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
         productDetail.setSku(sku);
+        
+        // Sinh mã barcode chuẩn EAN-13
+        String barcode = generateEAN13Barcode(wrapper.getProductId(), wrapper.getColorId(), wrapper.getSizeId(), wrapper.getMaterialId());
+        ProductDetail existedByBarcode = productDetailService.findByBarcode(barcode);
+        if (existedByBarcode != null) {
+            response.setStatus(HttpStatus.BAD_REQUEST);
+            response.setMessageError("Sản phẩm đã tồn tại với barcode: " + barcode + ", tên: " + existedByBarcode.getName());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        productDetail.setBarcode(barcode);
 
 		productDetailService.create(productDetail);
 		response.setData(new ProductDetailResponse(productDetail));
@@ -324,6 +337,17 @@ public class ProductDetailController  {
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
             productDetail.setSku(sku);
+            
+            // Sinh mã barcode chuẩn EAN-13
+            String barcode = generateEAN13Barcode(wrapper.getProductId(), wrapper.getColorId(), wrapper.getSizeId(), wrapper.getMaterialId());
+            ProductDetail existedByBarcode = productDetailService.findByBarcode(barcode);
+            if (existedByBarcode != null) {
+                response.setStatus(HttpStatus.BAD_REQUEST);
+                response.setMessageError("Sản phẩm đã tồn tại với barcode: " + barcode + ", tên: " + existedByBarcode.getName());
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            productDetail.setBarcode(barcode);
+            
             productDetailService.create(productDetail);
             productDetailResponses.add(new ProductDetailResponse(productDetail));
         }
@@ -333,6 +357,25 @@ public class ProductDetailController  {
 	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+    // Sinh mã barcode chuẩn EAN-13
+    private String generateEAN13Barcode(int productId, int colorId, int sizeId, int materialId) {
+        // EAN-13: 13 số, ví dụ: 893 + productId(5 số) + colorId(2) + sizeId(2) + materialId(1) + checksum(1)
+        String prefix = "89";
+        String body = String.format("%05d%02d%02d%01d", productId, colorId, sizeId, materialId);
+        String partial = prefix + body; // 12 số
+        int checksum = calcEAN13Checksum(partial);
+        return partial + checksum;
+    }
+
+    // Tính checksum cho EAN-13
+    private int calcEAN13Checksum(String code) {
+        int sum = 0;
+        for (int i = 0; i < code.length(); i++) {
+            int digit = code.charAt(i) - '0';
+            sum += (i % 2 == 0) ? digit : digit * 3;
+        }
+        return (10 - (sum % 10)) % 10;
+    }
 
 	@PostMapping("/{id}/update")
 	public ResponseEntity<BaseResponse<ProductDetailResponse>> update(@PathVariable("id") int id,
@@ -451,4 +494,25 @@ public class ProductDetailController  {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+    @GetMapping("/barcode/{barcode}")
+    public ResponseEntity<BaseResponse<ProductDetailResponse>> getByBarcode(@PathVariable("barcode") String barcode) {
+        BaseResponse<ProductDetailResponse> response = new BaseResponse<>();
+        ProductDetail productDetail = productDetailService.findByBarcode(barcode);
+        if (productDetail == null) {
+            response.setStatus(HttpStatus.NOT_FOUND);
+            response.setMessageError("Không tìm thấy sản phẩm với barcode: " + barcode);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        response.setData(new ProductDetailResponse(productDetail));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/barcode-image/{barcode}")
+    public ResponseEntity<byte[]> getBarcodeImage(@PathVariable("barcode") String barcode) throws Exception {
+        // Sinh hình ảnh barcode EAN-13
+        byte[] image = BarcodeUtil.generateEAN13BarcodeImage(barcode);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        return new ResponseEntity<>(image, headers, HttpStatus.OK);
+    }
 }

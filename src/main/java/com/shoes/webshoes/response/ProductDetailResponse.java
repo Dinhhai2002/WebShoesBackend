@@ -54,6 +54,12 @@ public class ProductDetailResponse {
     @JsonProperty("product")
     private ProductResponse product;
 
+    @JsonProperty("sku")
+    private String sku;
+
+    @JsonProperty("barcode")
+    private String barcode;
+
 	public ProductDetailResponse() {
 
 	}
@@ -76,6 +82,8 @@ public class ProductDetailResponse {
 		this.price = entity.getPrice();
 		this.imageUrl = entity.getImageUrl();
 		this.status = entity.getStatus();
+		this.sku = entity.getSku();
+		this.barcode = entity.getBarcode();
 	}
 
 	public ProductDetailResponse(ProductDetail entity, Product product) {

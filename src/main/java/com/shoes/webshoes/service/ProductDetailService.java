@@ -31,4 +31,6 @@ public interface ProductDetailService {
     List<ProductDetail> findByIds(List<Integer> ids);
 
     ProductDetail findBySku(String sku);
+
+    ProductDetail findByBarcode(String barcode);
 }

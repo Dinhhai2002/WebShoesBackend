@@ -66,4 +66,7 @@ public class ProductDetail extends BaseEntity{
 	private String category;
 	
 	private String sku;
+
+	@Column(name = "barcode", unique = true, length = 13)
+	private String barcode;
 }
