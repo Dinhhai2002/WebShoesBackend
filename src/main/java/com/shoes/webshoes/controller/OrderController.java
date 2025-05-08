@@ -221,17 +221,34 @@ public class OrderController extends BaseController {
 			if (currentStatus == StatusOrderEnum.CONFIRMED.getValue()
 					&& (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue()
 							|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue())) {
-				restoreProductStock(order.getId());
+				try {
+					restoreProductStock(order.getId());
+				} catch (Exception e) {
+					// Log lỗi nhưng vẫn cho phép hủy đơn hàng
+					System.err.println("Lỗi khi hoàn lại số lượng tồn kho: " + e.getMessage());
+				}
 			}
 			if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()
 					&& order.getStatus() == StatusOrderEnum.PROCESSING.getValue()) {
-				restoreProductStock(order.getId());
+				try {
+					restoreProductStock(order.getId());
+				} catch (Exception e) {
+					// Log lỗi nhưng vẫn cho phép hủy đơn hàng
+					System.err.println("Lỗi khi hoàn lại số lượng tồn kho: " + e.getMessage());
+				}
 			}
 		} else if (newStatus == StatusOrderEnum.CONFIRMED.getValue()) {
 			// Cập nhật số lượng tồn kho khi xác nhận đơn hàng COD hoặc STORE
 			if (order.getPaymentMethod() == PaymentMethodEnum.COD.getValue()
 					|| order.getPaymentMethod() == PaymentMethodEnum.STORE.getValue()) {
-				updateProductStock(order.getId());
+				try {
+					updateProductStock(order.getId());
+				} catch (Exception e) {
+					// Nếu không đủ hàng, trả về lỗi và không cho phép xác nhận đơn hàng
+					response.setStatus(HttpStatus.BAD_REQUEST);
+					response.setMessageError(e.getMessage());
+					return new ResponseEntity<>(response, HttpStatus.OK);
+				}
 			}
 		}
 
@@ -579,7 +596,14 @@ public class OrderController extends BaseController {
 
 			// Cập nhật số lượng tồn kho cho đơn hàng VNPAY
 			if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()) {
-				updateProductStock(order.getId());
+				try {
+					updateProductStock(order.getId());
+				} catch (Exception e) {
+					// Nếu không đủ hàng, trả về lỗi và không cho phép xác nhận thanh toán
+					response.setStatus(HttpStatus.BAD_REQUEST);
+					response.setMessageError(e.getMessage());
+					return new ResponseEntity<>(response, HttpStatus.OK);
+				}
 			}
 		}
 		// Nếu thanh toán thất bại hoặc bị hủy
@@ -587,12 +611,6 @@ public class OrderController extends BaseController {
 				|| wrapper.getPaymentStatus() == PaymentStatusEnum.CANCELLED.getValue()) {
 			// Cập nhật trạng thái đơn hàng sang CANCELLED
 			order.setStatus(StatusOrderEnum.CANCELLED.getValue());
-
-			// Hoàn lại số lượng sản phẩm nếu đã trừ stock (cho VNPAY)
-			// if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()
-			// && order.getStatus() == StatusOrderEnum.PROCESSING.getValue()) {
-			// restoreProductStock(order.getId());
-			// }
 		}
 
 		orderService.update(order);
@@ -611,12 +629,23 @@ public class OrderController extends BaseController {
 		List<OrderDetail> orderDetails = orderDetailService.spGListOrderDetail(orderId, "", 1, new Pagination(0, 100))
 				.getResult();
 
+		// Kiểm tra trước số lượng tồn kho có đủ hay không
 		for (OrderDetail orderDetail : orderDetails) {
 			ProductDetail productDetail = productDetailService.findOne(orderDetail.getProductDetailId());
-			if (productDetail != null) {
-				productDetail.setStock(productDetail.getStock() - orderDetail.getQuantity());
-				productDetailService.update(productDetail);
+			if (productDetail == null) {
+				throw new Exception("Không tìm thấy thông tin sản phẩm với ID: " + orderDetail.getProductDetailId());
 			}
+			
+			if (productDetail.getStock() < orderDetail.getQuantity()) {
+				throw new Exception("Sản phẩm " + productDetail.getName() + " không đủ số lượng tồn kho. Hiện chỉ còn " + productDetail.getStock());
+			}
+		}
+		
+		// Sau khi đã kiểm tra đủ số lượng, tiến hành cập nhật
+		for (OrderDetail orderDetail : orderDetails) {
+			ProductDetail productDetail = productDetailService.findOne(orderDetail.getProductDetailId());
+			productDetail.setStock(productDetail.getStock() - orderDetail.getQuantity());
+			productDetailService.update(productDetail);
 		}
 	}
 
@@ -746,11 +775,21 @@ public class OrderController extends BaseController {
 			// Hoàn lại stock nếu đơn hàng đã được xác nhận hoặc đang xử lý
 			if (currentStatus == StatusOrderEnum.CONFIRMED.getValue()
 					|| currentStatus == StatusOrderEnum.PROCESSING.getValue()) {
-				restoreProductStock(order.getId());
+				try {
+					restoreProductStock(order.getId());
+				} catch (Exception e) {
+					// Log lỗi nhưng vẫn cho phép hủy đơn hàng
+					System.err.println("Lỗi khi hoàn lại số lượng tồn kho: " + e.getMessage());
+				}
 			}
 		} else if (order.getPaymentMethod() == PaymentMethodEnum.VNPAY.getValue()
 				&& order.getPaymentStatus() == PaymentStatusEnum.PAID.getValue()) {
-			restoreProductStock(order.getId());
+			try {
+				restoreProductStock(order.getId());
+			} catch (Exception e) {
+				// Log lỗi nhưng vẫn cho phép hủy đơn hàng
+				System.err.println("Lỗi khi hoàn lại số lượng tồn kho: " + e.getMessage());
+			}
 		}
 
 		orderService.update(order);
