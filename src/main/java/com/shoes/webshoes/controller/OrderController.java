@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -795,6 +796,26 @@ public class OrderController extends BaseController {
 		orderService.update(order);
 		response.setData(new OrderResponse(order));
 
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping("/by-payment-status")
+	public ResponseEntity<BaseResponse<BaseListDataResponse<OrderResponse>>> getByPaymentStatuses(
+			@RequestParam(name = "payment_statuses", required = true, defaultValue = "1,2,3") String paymentStatuses,
+			@RequestParam(name = "page", required = false, defaultValue = "1") int page,
+			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
+		BaseResponse<BaseListDataResponse<OrderResponse>> response = new BaseResponse<>();
+		Pagination pagination = new Pagination(page, limit);
+		List<Integer> paymentStatusesInt = Arrays.stream(paymentStatuses.split(","))
+			.map(Integer::parseInt)
+			.collect(Collectors.toList());
+		StoreProcedureListResult<Order> listOrder = orderService.findByPaymentStatuses(paymentStatusesInt, pagination);
+
+		BaseListDataResponse<OrderResponse> listData = new BaseListDataResponse<>();
+		listData.setList(new OrderResponse().mapToList(listOrder.getResult()));
+		listData.setTotalRecord(listOrder.getTotalRecord());
+
+		response.setData(listData);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

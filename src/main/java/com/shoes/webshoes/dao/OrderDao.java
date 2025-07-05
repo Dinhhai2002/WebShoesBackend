@@ -16,5 +16,7 @@ public interface OrderDao {
 
     StoreProcedureListResult<Order> spGListOrder(int userId, String keySearch, int status, int paymentStatus, int paymentMethod, Pagination pagination) throws Exception;
 
+    StoreProcedureListResult<Order> findByPaymentStatuses(List<Integer> paymentStatuses, Pagination pagination) throws Exception;
+
     Order findByName(String name);
 }

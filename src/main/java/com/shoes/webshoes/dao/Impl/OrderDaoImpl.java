@@ -1,6 +1,7 @@
 package com.shoes.webshoes.dao.Impl;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
@@ -95,4 +96,53 @@ public class OrderDaoImpl extends AbstractDao<Integer, Order> implements OrderDa
 			throw new Exception(messageError);
 		}
 	}
+
+
+    @Override
+    public StoreProcedureListResult<Order> findByPaymentStatuses(List<Integer> paymentStatuses, Pagination pagination) throws Exception {
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Order> query = builder.createQuery(Order.class);
+        Root<Order> root = query.from(Order.class);
+
+        // Build conditions
+        List<javax.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+        // Filter by payment statuses
+        if (paymentStatuses != null && !paymentStatuses.isEmpty()) {
+            predicates.add(root.get("paymentMethod").in(paymentStatuses));
+        }
+
+        // Apply all conditions
+        query.where(predicates.toArray(new javax.persistence.criteria.Predicate[0]));
+
+        // Add sorting by created_at desc
+        query.orderBy(builder.desc(root.get("createdAt")));
+
+        // Get total count
+        CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
+        Root<Order> countRoot = countQuery.from(Order.class);
+        countQuery.select(builder.count(countRoot));
+        
+        // Use the same predicates for count query
+        List<javax.persistence.criteria.Predicate> countPredicates = new ArrayList<>();
+        if (paymentStatuses != null && !paymentStatuses.isEmpty()) {
+            countPredicates.add(countRoot.get("paymentStatus").in(paymentStatuses));
+        }
+        countQuery.where(countPredicates.toArray(new javax.persistence.criteria.Predicate[0]));
+        
+        Long totalCount = this.getSession().createQuery(countQuery).getSingleResult();
+
+        // Apply pagination
+        List<Order> results = this.getSession().createQuery(query)
+            .setFirstResult(pagination.getOffset())
+            .setMaxResults(pagination.getLimit())
+            .getResultList();
+
+        return new StoreProcedureListResult<>(
+            StoreProcedureStatusCodeEnum.SUCCESS.getValue(),
+            "Success",
+            totalCount.intValue(),
+            results
+        );
+    }
 }

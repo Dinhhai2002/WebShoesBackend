@@ -48,4 +48,9 @@ public class OrderServiceImpl implements OrderService {
             Pagination pagination) throws Exception {
         return orderDao.spGListOrder(userId, keySearch, status, paymentStatus, paymentMethod, pagination);
     }
+
+    @Override
+    public StoreProcedureListResult<Order> findByPaymentStatuses(List<Integer> paymentStatuses, Pagination pagination) throws Exception {
+        return orderDao.findByPaymentStatuses(paymentStatuses, pagination);
+    }
 }

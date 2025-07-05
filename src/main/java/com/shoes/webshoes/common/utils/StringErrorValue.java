@@ -22,7 +22,7 @@ public class StringErrorValue {
 	public static final String OTP_IS_NOT_CONFIRM = "Bạn chưa thực hiện bước xác thực otp để reset mật khẩu!";
 	public static final String USER_NOT_LOCK = "Bạn không thể khóa chính tài khoản của bạn!";
 	public static final String ACCOUNT_GOOLE_IS_NOT_PERMIT = "Tài khoản đăng nhập từ Google không thể thực hiện chức năng quên mật khẩu!";
-
+ 
 	// Danh Muc
 	public static final String CATEGORY_NOT_FOUND = "Danh mục không tồn tại!";
 	public static final String CATEGORY_IS_EXIST = "Danh mục đã tồn tại!";
