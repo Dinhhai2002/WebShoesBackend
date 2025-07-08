@@ -7,16 +7,22 @@ import com.shoes.webshoes.entity.Category;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 
 public interface CategoryService {
-	void create(Category Category) throws Exception;
+	void create(Category category);
 
-	Category findOne(int id) throws Exception;
+	Category findOne(int id);
 	
-	List<Category> getAll() throws Exception;
+	List<Category> getAll();
 
-	void update(Category Category) throws Exception;
+	void update(Category category);
 	
-	Category findByName(String name) throws Exception;
+	Category findByName(String name);
 
-	StoreProcedureListResult<Category> spGListCategory(String keySearch,int status,Pagination pagination) throws Exception;
+	List<Category> findByIds(List<Integer> ids);
+
+	StoreProcedureListResult<Category> spGListCategory(
+		int parentId,
+		String keySearch,
+		int status,
+		Pagination pagination
+	) throws Exception;
 }
-

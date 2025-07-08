@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.english_center</groupId>
-	<artifactId>english_center</artifactId>
+	<groupId>com.webshoes</groupId>
+	<artifactId>webshoes</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>english_center</name>
+	<name>webshoes</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -141,6 +141,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.33</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
 		<dependency>
@@ -195,9 +196,9 @@
             <artifactId>google-api-client</artifactId>
             <version>1.30.4</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.google.api.client/google-api-client-googleapis-auth-oauth
+        <!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client-googleapis-auth-oauth
 		<dependency>
-		    <groupId>com.google.api.client</groupId>
+		    <groupId>com.google.api-client</groupId>
 		    <artifactId>google-api-client-googleapis-auth-oauth</artifactId>
 		    <version>1.2.3-alpha</version>
 		</dependency>
@@ -234,6 +235,17 @@
 			<version>4.1.2</version>
 		</dependency>
 		
+		<!-- ZXing Barcode library for modern barcode/QR code generation -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.2</version>
+        </dependency>
 		
 		<dependency>
 		  <groupId>org.projectlombok</groupId>

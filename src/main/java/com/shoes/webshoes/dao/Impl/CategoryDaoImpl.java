@@ -24,24 +24,24 @@ import com.shoes.webshoes.model.StoreProcedureListResult;
 @Transactional
 public class CategoryDaoImpl extends AbstractDao<Integer, Category> implements CategoryDao{
     @Override
-	public void create(Category category) throws Exception {
+	public void create(Category category) {
 		this.getSession().save(category);
 		
 	}
 
 	@Override
-	public Category findOne(int id) throws Exception {
+	public Category findOne(int id) {
 		return this.getSession().find(Category.class,id);
 	}
 
 	@Override
-	public void update(Category category) throws Exception {
+	public void update(Category category) {
 		this.getSession().update(category);		
 		
 	}
 
 	@Override
-	public Category findByName(String name) throws Exception {
+	public Category findByName(String name) {
 		CriteriaBuilder builder = this.getBuilder();
 		CriteriaQuery<Category> query = builder.createQuery(Category.class);
 		Root<Category> root = query.from(Category.class);
@@ -51,7 +51,7 @@ public class CategoryDaoImpl extends AbstractDao<Integer, Category> implements C
 	}
 
 	@Override
-	public List<Category> getAll() throws Exception {
+	public List<Category> getAll() {
 		CriteriaBuilder builder = this.getBuilder();
 		CriteriaQuery<Category> query = builder.createQuery(Category.class);
 		Root<Category> root = query.from(Category.class);
@@ -60,20 +60,37 @@ public class CategoryDaoImpl extends AbstractDao<Integer, Category> implements C
 		return this.getSession().createQuery(query).getResultList();
 	}
 
+    @Override
+    public List<Category> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        CriteriaBuilder builder = this.getBuilder();
+        CriteriaQuery<Category> query = builder.createQuery(Category.class);
+        Root<Category> root = query.from(Category.class);
+        query.select(root).where(root.get("id").in(ids));
+        return this.getSession().createQuery(query).getResultList();
+    }
+
 	@SuppressWarnings("unchecked")
 	@Override
-	public StoreProcedureListResult<Category> spGListCategory(String keySearch, int status, Pagination pagination)
-			throws Exception {
-		StoredProcedureQuery query = this.getSession().createStoredProcedureQuery("sp_g_list_category", Category.class)
+	public StoreProcedureListResult<Category> spGListCategory(
+			int parentId,
+			String keySearch,
+			int status,
+			Pagination pagination) throws Exception {
+		StoredProcedureQuery query = this.getSession()
+				.createStoredProcedureQuery("sp_g_list_category", Category.class)
+				.registerStoredProcedureParameter("parentId", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("keySearch", String.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("status", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("_limit", Integer.class, ParameterMode.IN)
 				.registerStoredProcedureParameter("_offset", Integer.class, ParameterMode.IN)
-
 				.registerStoredProcedureParameter("total_record", Integer.class, ParameterMode.OUT)
 				.registerStoredProcedureParameter("status_code", Integer.class, ParameterMode.OUT)
 				.registerStoredProcedureParameter("message_error", String.class, ParameterMode.OUT);
 
+		query.setParameter("parentId", parentId);
 		query.setParameter("keySearch", keySearch);
 		query.setParameter("status", status);
 		query.setParameter("_limit", pagination.getLimit());

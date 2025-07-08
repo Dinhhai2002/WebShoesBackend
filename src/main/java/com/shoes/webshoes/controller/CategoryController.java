@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
@@ -23,25 +24,31 @@ import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.CategoryResponse;
 import com.shoes.webshoes.service.CategoryService;
+import com.shoes.webshoes.service.impl.FirebaseImageService;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/category")
 public class CategoryController  {
     @Autowired
-    public CategoryService categoryService;
+    private CategoryService categoryService;
+    
+    @Autowired
+	public FirebaseImageService iFirebaseImageService;
 
     @GetMapping("")
 //	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<CategoryResponse>>> getAll(
+			@RequestParam(name = "parent_id", required = false, defaultValue = "-1") int parentId,
 			@RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
 			@RequestParam(name = "status", required = false, defaultValue = "-1") int status,
 			@RequestParam(name = "page", required = false, defaultValue = "1") int page,
 			@RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
 		BaseResponse<BaseListDataResponse<CategoryResponse>> response = new BaseResponse<>();
 		Pagination pagination = new Pagination(page, limit);
-		StoreProcedureListResult<Category> listCategory = categoryService.spGListCategory(keySearch,
-				status, pagination);
+		StoreProcedureListResult<Category> listCategory = categoryService.spGListCategory(
+				parentId, keySearch, status, pagination);
 
 		BaseListDataResponse<CategoryResponse> listData = new BaseListDataResponse<>();
 
@@ -52,18 +59,32 @@ public class CategoryController  {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
+    @GetMapping("/all")
+	public ResponseEntity<BaseResponse<List<CategoryResponse>>> getAllCategories() throws Exception {
+		BaseResponse<List<CategoryResponse>> response = new BaseResponse<>();
+		
+		// Lấy tất cả category có status = 1 (active)
+		StoreProcedureListResult<Category> listCategory = categoryService.spGListCategory(
+				-1, "", 1, new Pagination(0, Integer.MAX_VALUE));
+		
+		List<CategoryResponse> categoryResponses = new CategoryResponse().mapToList(listCategory.getResult());
+		response.setData(categoryResponses);
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
     
     @GetMapping("/{id}")
 	public ResponseEntity<BaseResponse<CategoryResponse>> findOneById(@PathVariable("id") int id) throws Exception {
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category Category = categoryService.findOne(id);
+		Category category = categoryService.findOne(id);
 
-		if (Category == null) {
+		if (category == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-        response.setData(new CategoryResponse(Category));
+        response.setData(new CategoryResponse(category));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -72,69 +93,100 @@ public class CategoryController  {
 	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<CategoryResponse>> changeStatus(@PathVariable("id") int id) throws Exception {
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category Category = categoryService.findOne(id);
+		Category category = categoryService.findOne(id);
 
-		if (Category == null) {
+		if (category == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Category.setStatus(Category.getStatus() == 1 ? 0 : 1);
+		category.setStatus(category.getStatus() == 1 ? 0 : 1);
 
-		categoryService.update(Category);
-        response.setData(new CategoryResponse(Category));
+		categoryService.update(category);
+        response.setData(new CategoryResponse(category));
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping("/create")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<CategoryResponse>> create(
 			@Valid @RequestBody CRUDCategoryRequest wrapper) throws Exception {
 
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category CategoryCheck = categoryService.findByName(wrapper.getName());
+		Category categoryCheck = categoryService.findByName(wrapper.getName());
 
-		if (CategoryCheck != null) {
+		if (categoryCheck != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+			response.setMessageError(StringErrorValue.CATEGORY_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Category Category = new Category();
-		Category.setName(wrapper.getName());
-		Category.setStatus(1);
+		Category category = new Category();
+		category.setName(wrapper.getName());
+		category.setParentId(wrapper.getParentId());
+		category.setImageUrl(wrapper.getImageUrl());
+		category.setStatus(1);
 
-		categoryService.create(Category);
-		response.setData(new CategoryResponse(Category));
+		categoryService.create(category);
+		response.setData(new CategoryResponse(category));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping("/{id}/update")
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
 	public ResponseEntity<BaseResponse<CategoryResponse>> update(@PathVariable("id") int id,
 			@Valid @RequestBody CRUDCategoryRequest wrapper) throws Exception {
 
 		BaseResponse<CategoryResponse> response = new BaseResponse<>();
-		Category Category = categoryService.findOne(id);
+		Category category = categoryService.findOne(id);
 
-		if (Category == null) {
+		if (category == null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 		// check name đã tồn tại hay chưa
-		if (!Category.getName().equals(wrapper.getName())
+		if (!category.getName().equals(wrapper.getName())
 				&& categoryService.findByName(wrapper.getName()) != null) {
 			response.setStatus(HttpStatus.BAD_REQUEST);
 			response.setMessageError(StringErrorValue.CATEGORY_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		}
-		Category.setName(wrapper.getName());
-		categoryService.update(Category);
+		category.setName(wrapper.getName());
+		category.setParentId(wrapper.getParentId());
+		category.setImageUrl(wrapper.getImageUrl());
+		categoryService.update(category);
 
-		response.setData(new CategoryResponse(Category));
+		response.setData(new CategoryResponse(category));
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@PreAuthorize("hasAnyAuthority('ADMIN')")
+	@PostMapping("/{id}/image")
+	public ResponseEntity<BaseResponse> uploadBanner(@RequestParam(name = "file") MultipartFile file,
+			@PathVariable("id") int id) throws Exception {
+		BaseResponse response = new BaseResponse();
+		Category category = categoryService.findOne(id);
+
+		if (category == null) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.CATEGORY_NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+		String fileName = iFirebaseImageService.save(file);
+
+		String imageUrl = iFirebaseImageService.getImageUrl(fileName);
+
+		category.setImageUrl(imageUrl);
+		categoryService.update(category);
+
+		response.setData(new CategoryResponse(category));
+		
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

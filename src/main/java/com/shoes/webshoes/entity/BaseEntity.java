@@ -58,6 +58,15 @@ private static final long serialVersionUID = 1L;
 		}
 	}
 	
+	public String getFullDatetimeFormatVN(Date date) {
+		if(date == null) {
+			date = new Date();
+			return (new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(date));
+		} else {
+			return (new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(date));
+		}
+	}
+	
 	public String getDateFormatVNEmptyIfNull(Date date) {
 		if(date == null) {
 			return "";

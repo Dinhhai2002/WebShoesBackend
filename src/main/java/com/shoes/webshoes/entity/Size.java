@@ -12,9 +12,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @Entity
-@Table(name = "categories")
-public class Size extends BaseEntity {
-      /**
+@Table(name = "sizes")
+public class Size extends BaseEntity{
+    /**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;

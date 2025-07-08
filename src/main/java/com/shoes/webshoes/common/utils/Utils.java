@@ -2,6 +2,7 @@ package com.shoes.webshoes.common.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -9,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shoes.webshoes.entity.Voucher;
 
 public class Utils {
 	public static Date convertStringToDate(String dateString) throws ParseException {
@@ -78,12 +80,10 @@ public class Utils {
 		return videoId;
 	}
 
-	public static Boolean isAccessNextVideo(long currentDuration, long durationLessons) {
-		double progress = ((double) currentDuration / durationLessons) * 100;
-		if (progress >= 80) {
+	public static Boolean isEmpty(Integer currentId) {
+		if(currentId == null || currentId == 0) {
 			return true;
 		}
-
 		return false;
 	}
 	

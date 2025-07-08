@@ -12,42 +12,53 @@ import com.shoes.webshoes.entity.Category;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.service.CategoryService;
 
-
+/**
+ * 
+ * @author 
+ *
+ */
 @Service("CategoryService")
 @Transactional(rollbackFor = Error.class)
 public class CategoryServiceImpl implements CategoryService {
     @Autowired
-	CategoryDao CategoryDao;
+	CategoryDao categoryDao;
 
 	@Override
-	public void create(Category category) throws Exception {
-		CategoryDao.create(category);
-
+	public void create(Category category) {
+		categoryDao.create(category);
 	}
 
 	@Override
-	public Category findOne(int id) throws Exception {
-		return CategoryDao.findOne(id);
+	public Category findOne(int id) {
+		return categoryDao.findOne(id);
 	}
 
 	@Override
-	public void update(Category category) throws Exception {
-			CategoryDao.update(category);
+	public void update(Category category) {
+		categoryDao.update(category);
 	}
 
 	@Override
-	public Category findByName(String name) throws Exception {
-		return CategoryDao.findByName(name);
+	public Category findByName(String name) {
+		return categoryDao.findByName(name);
 	}
 
 	@Override
-	public List<Category> getAll() throws Exception {
-		return CategoryDao.getAll();
+	public List<Category> getAll() {
+		return categoryDao.getAll();
 	}
 
 	@Override
-	public StoreProcedureListResult<Category> spGListCategory(String keySearch, int status,
+	public StoreProcedureListResult<Category> spGListCategory(
+			int parentId,
+			String keySearch,
+			int status,
 			Pagination pagination) throws Exception {
-		return CategoryDao.spGListCategory(keySearch, status, pagination);
+		return categoryDao.spGListCategory(parentId, keySearch, status, pagination);
 	}
+
+    @Override
+    public List<Category> findByIds(List<Integer> ids) {
+        return categoryDao.findByIds(ids);
+    }
 }

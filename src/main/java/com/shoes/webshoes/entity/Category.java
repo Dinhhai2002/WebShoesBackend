@@ -29,5 +29,8 @@ public class Category extends BaseEntity{
 	@Column(name = "parent_id")
 	private int parentId;
 
+	@Column(name = "image_url")
+	private String imageUrl;
+
 	private int status;
 }
