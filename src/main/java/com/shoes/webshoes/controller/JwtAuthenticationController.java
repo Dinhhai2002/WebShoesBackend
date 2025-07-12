@@ -45,6 +45,8 @@ import com.shoes.webshoes.entity.Wards;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDUserRequest;
 import com.shoes.webshoes.request.ConfirmOtpRequest;
+import com.shoes.webshoes.request.GHNFeeRequest;
+import com.shoes.webshoes.request.GHNServiceRequest;
 import com.shoes.webshoes.request.GoogleAccountRequest;
 import com.shoes.webshoes.request.JwtRequest;
 import com.shoes.webshoes.request.OTPRegisterUserRequest;
@@ -56,6 +58,10 @@ import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.BrandResponse;
 import com.shoes.webshoes.response.CategoryResponse;
 import com.shoes.webshoes.response.ColorResponse;
+import com.shoes.webshoes.response.GHNFeeDetailResponse;
+import com.shoes.webshoes.response.GHNFeeResponse;
+import com.shoes.webshoes.response.GHNServiceListResponse;
+import com.shoes.webshoes.response.GHNServiceResponse;
 import com.shoes.webshoes.response.JwtResponse;
 import com.shoes.webshoes.response.MaterialsResponse;
 import com.shoes.webshoes.response.ProductDetailResponse;
@@ -63,6 +69,12 @@ import com.shoes.webshoes.response.ProductResponse;
 import com.shoes.webshoes.response.ReviewResponse;
 import com.shoes.webshoes.response.SizeResponse;
 import com.shoes.webshoes.response.UserResponse;
+import com.shoes.webshoes.response.GHNProvinceListResponse;
+import com.shoes.webshoes.response.GHNDistrictListResponse;
+import com.shoes.webshoes.response.GHNWardListResponse;
+import com.shoes.webshoes.response.GHNProvinceResponse;
+import com.shoes.webshoes.response.GHNDistrictResponse;
+import com.shoes.webshoes.response.GHNWardResponse;
 import com.shoes.webshoes.service.AddressBookService;
 import com.shoes.webshoes.service.BannerService;
 import com.shoes.webshoes.service.BrandService;
@@ -71,6 +83,7 @@ import com.shoes.webshoes.service.CategoryService;
 import com.shoes.webshoes.service.CityService;
 import com.shoes.webshoes.service.ColorService;
 import com.shoes.webshoes.service.DistrictService;
+import com.shoes.webshoes.service.GHNService;
 import com.shoes.webshoes.service.ImageService;
 import com.shoes.webshoes.service.MaterialsService;
 import com.shoes.webshoes.service.ProductDetailService;
@@ -139,6 +152,9 @@ public class JwtAuthenticationController extends BaseController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private GHNService ghnService;
     
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<JwtResponse>> createAuthenticationToken(@RequestBody JwtRequest wrapper)
@@ -664,5 +680,82 @@ public class JwtAuthenticationController extends BaseController {
 
         response.setData(listData);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
+    @PostMapping("/ghn/available-services")
+    public ResponseEntity<BaseResponse<List<GHNServiceResponse>>> getAvailableServices(@RequestBody GHNServiceRequest request) {
+        try {
+            GHNServiceListResponse response = ghnService.getAvailableServices(request);
+            BaseResponse<List<GHNServiceResponse>> baseResponse = new BaseResponse<>();
+            baseResponse.setData(response.getData());
+            return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+        } catch (Exception e) {
+            BaseResponse<List<GHNServiceResponse>> errorResponse = new BaseResponse<>();
+            errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            errorResponse.setMessageError("Error: " + e.getMessage());
+			return new ResponseEntity<>(errorResponse, HttpStatus.OK);
+        }
+    }
+
+    @PostMapping("/ghn/calculate-fee")
+    public ResponseEntity<BaseResponse<GHNFeeResponse>> calculateShippingFee(@RequestBody GHNFeeRequest request) {
+        try {
+            GHNFeeDetailResponse response = ghnService.calculateShippingFee(request);
+            BaseResponse<GHNFeeResponse> baseResponse = new BaseResponse<>();
+            baseResponse.setData(response.getData());
+            return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+        } catch (Exception e) {
+            BaseResponse<GHNFeeResponse> errorResponse = new BaseResponse<>();
+            errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            errorResponse.setMessageError("Error: " + e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/ghn/provinces")
+    public ResponseEntity<BaseResponse<List<GHNProvinceResponse>>> getProvinces() {
+        try {
+            GHNProvinceListResponse response = ghnService.getProvinces();
+            BaseResponse<List<GHNProvinceResponse>> baseResponse = new BaseResponse<>();
+            baseResponse.setData(response.getData());
+            return ResponseEntity.ok(baseResponse);
+        } catch (Exception e) {
+            BaseResponse<List<GHNProvinceResponse>> errorResponse = new BaseResponse<>();
+            errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            errorResponse.setMessageError("Error: " + e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/ghn/districts")
+    public ResponseEntity<BaseResponse<List<GHNDistrictResponse>>> getDistricts(
+            @RequestParam(name = "province_id", required = true) Integer provinceId) {
+        try {
+            GHNDistrictListResponse response = ghnService.getDistricts(provinceId);
+            BaseResponse<List<GHNDistrictResponse>> baseResponse = new BaseResponse<>();
+            baseResponse.setData(response.getData());
+            return ResponseEntity.ok(baseResponse);
+        } catch (Exception e) {
+            BaseResponse<List<GHNDistrictResponse>> errorResponse = new BaseResponse<>();
+            errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            errorResponse.setMessageError("Error: " + e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/ghn/wards")
+    public ResponseEntity<BaseResponse<List<GHNWardResponse>>> getWards(
+            @RequestParam(name = "district_id", required = true) Integer districtId) {
+        try {
+            GHNWardListResponse response = ghnService.getWards(districtId);
+            BaseResponse<List<GHNWardResponse>> baseResponse = new BaseResponse<>();
+            baseResponse.setData(response.getData());
+            return ResponseEntity.ok(baseResponse);
+        } catch (Exception e) {
+            BaseResponse<List<GHNWardResponse>> errorResponse = new BaseResponse<>();
+            errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            errorResponse.setMessageError("Error: " + e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.OK);
+        }
     }
 }
