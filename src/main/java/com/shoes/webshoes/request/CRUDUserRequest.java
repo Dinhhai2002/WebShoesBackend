@@ -54,15 +54,24 @@ public class CRUDUserRequest {
 	@JsonProperty("city_id")
 	private int cityId;
 
+	@JsonProperty("city_name")
+	private String cityName;
+
 	@Schema(description = "Quận/Huyện")
 	@Min(value = 1, message = "Vui lòng nhập Quận/Huyện của nhà hàng")
 	@JsonProperty("district_id")
 	private int districtId;
 
+	@JsonProperty("district_name")
+	private String districtName;
+	
 	@Schema(description = "Phường/Xã")
 	@Min(value = 1, message = "Vui lòng nhập Phường/Xã của nhà hàng")
 	@JsonProperty("ward_id")
 	private int wardId;
+
+	@JsonProperty("ward_name")
+	private String wardName;
 
 	@NotEmpty(message = "fullAddress không được phép để trống")
 	@Length(max = 255, message = "Không được phép lớn hơn 255 kí tự")

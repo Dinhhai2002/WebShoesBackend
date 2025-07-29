@@ -177,7 +177,7 @@ public class ProductController  {
 
 		Product product = new Product();
 		product.setName(wrapper.getName());
-		product.setDescription(wrapper.getDescription());
+		product.setDescription(wrapper.getDescription() == null ? "" : wrapper.getDescription());
 		product.setBrandId(wrapper.getBrandId());
 		product.setCategoryId(wrapper.getCategoryId());
 		product.setPrice(wrapper.getPrice());

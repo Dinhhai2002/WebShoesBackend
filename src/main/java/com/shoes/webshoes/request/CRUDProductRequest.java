@@ -26,7 +26,7 @@ public class CRUDProductRequest {
 	@JsonProperty("category_id")
 	private int categoryId;
 
-	@NotEmpty(message = "description không được phép để trống")
+//	@NotEmpty(message = "description không được phép để trống")
 	private String description;
 
 	@Min(value = 0 , message ="giá sản phẩm not null")

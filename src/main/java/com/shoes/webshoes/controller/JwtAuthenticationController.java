@@ -212,20 +212,17 @@ public class JwtAuthenticationController extends BaseController {
                 wrapper.getFullAddress(),
                 wrapper.getRole()
         );
-        Cities city = cityService.findById(user.getCityId());
-        Districts district = districtService.findById(user.getDistrictId());
-        Wards ward = wardService.findById(user.getWardId());
 
         AddressBook addressBook = new AddressBook();
         addressBook.setUserId(user.getId());
         addressBook.setFullName(user.getFullName());
         addressBook.setPhone(user.getPhone());
-        addressBook.setWardId(user.getWardId());
-        addressBook.setWardName(ward != null ? ward.getName() : null);
-        addressBook.setDistrictId(user.getDistrictId());
-        addressBook.setDistrictName(district != null ? district.getName() : null);
-        addressBook.setCityId(user.getCityId());
-        addressBook.setCityName(city != null ? city.getName() : null);
+        addressBook.setWardId(wrapper.getWardId());
+        addressBook.setWardName(wrapper.getWardName());
+        addressBook.setDistrictId(wrapper.getDistrictId());
+        addressBook.setDistrictName(wrapper.getDistrictName());
+        addressBook.setCityId(wrapper.getCityId());
+        addressBook.setCityName(wrapper.getCityName());
         addressBook.setFullAddress(user.getFullAddress());
         addressBook.setIsDefault(1);
         addressBook.setStatus(1);

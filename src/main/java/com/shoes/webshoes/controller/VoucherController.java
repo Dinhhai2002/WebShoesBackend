@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shoes.webshoes.common.enums.DiscountTypeEnum;
 import com.shoes.webshoes.common.utils.Pagination;
 import com.shoes.webshoes.common.utils.StringErrorValue;
 import com.shoes.webshoes.common.utils.Utils;
@@ -118,18 +119,17 @@ public class VoucherController extends BaseController {
 		BigDecimal bestDiscountAmount = BigDecimal.ZERO;
 		Voucher bestVoucher = null;
 		VoucherResponse bestVoucherResponse = null;
-
+		List<Product> products = productService.getAll();
+		Map<Integer, Product> productMap = new HashMap<>();
+		for (Product product : products) {
+			productMap.put(product.getId(), product);
+		}
 		for (Voucher voucher : availableVouchers) {
 			BigDecimal amountVoucher = BigDecimal.ZERO;
 			VoucherApplication voucherApplication = voucherApplicationService
 					.spGListVoucherApplication(voucher.getId(), -1, -1, -1, "", 1, new Pagination(0, 20)).getResult()
 					.stream().findFirst().orElse(null);
 			Set<Integer> listProductIdsApplyVoucher = new HashSet<>();
-			List<Product> products = productService.getAll();
-			Map<Integer, Product> productMap = new HashMap<>();
-			for (Product product : products) {
-				productMap.put(product.getId(), product);
-			}
 			if (voucherApplication == null || (Utils.isEmpty(voucherApplication.getProductId())
 					&& Utils.isEmpty(voucherApplication.getBrandId())
 					&& Utils.isEmpty(voucherApplication.getCategoryId()))) {
@@ -139,8 +139,12 @@ public class VoucherController extends BaseController {
 						voucher, voucherApplication, listProductIdsApplyVoucher, productMap);
 			}
 
-			if (amountVoucher.compareTo(bestDiscountAmount) > 0 && amountVoucher.compareTo(totalAmount) <= 0) {					
-				bestDiscountAmount = amountVoucher;
+			if (amountVoucher.compareTo(bestDiscountAmount) > 0) {
+				if(amountVoucher.compareTo(totalAmount) >= 0) {
+					bestDiscountAmount = totalAmount;
+				} else {
+					bestDiscountAmount = amountVoucher;
+				}
 				bestVoucher = voucher;
 				if (bestVoucher != null) {
 					bestVoucherResponse = new VoucherResponse(bestVoucher);
@@ -285,6 +289,12 @@ public class VoucherController extends BaseController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
+		if(wrapper.getDiscountType() == DiscountTypeEnum.PERCENT.getValue() && wrapper.getDiscountValue().compareTo(new BigDecimal(100)) > 0) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.VOUCHER_DISCOUNT_VALUE_INVALID);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
 		Voucher voucher = new Voucher();
 		voucher.setCode(wrapper.getCode());
 		voucher.setDiscountType(wrapper.getDiscountType());
@@ -320,6 +330,11 @@ public class VoucherController extends BaseController {
 			response.setMessageError(StringErrorValue.VOUCHER_IS_EXIST);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
+		}
+		if(wrapper.getDiscountType() == DiscountTypeEnum.PERCENT.getValue() && wrapper.getDiscountValue().compareTo(new BigDecimal(100)) > 0) {
+			response.setStatus(HttpStatus.BAD_REQUEST);
+			response.setMessageError(StringErrorValue.VOUCHER_DISCOUNT_VALUE_INVALID);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 		voucher.setCode(wrapper.getCode());
 		voucher.setDiscountType(wrapper.getDiscountType());
