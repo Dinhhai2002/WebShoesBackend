@@ -5,86 +5,129 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.shoes.webshoes.common.enums.StatusOrderEnum;
+import org.springframework.web.bind.annotation.*;
 import com.shoes.webshoes.entity.Order;
+import com.shoes.webshoes.entity.ReturnRequest;
+import com.shoes.webshoes.common.enums.ReturnStatus;
+import com.shoes.webshoes.common.enums.StatusOrderEnum;
 import com.shoes.webshoes.response.BaseResponse;
 import com.shoes.webshoes.response.WebsiteStatisticalResponse;
 import com.shoes.webshoes.service.OrderService;
 import com.shoes.webshoes.service.ProductDetailService;
+import com.shoes.webshoes.service.ReturnRequestService;
 import com.shoes.webshoes.service.StatisticalService;
 import com.shoes.webshoes.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin")
 public class AdminController extends BaseController {
-	
-	@Autowired
-	UserService userService;
-	
-	@Autowired
-	OrderService orderService;
-	
-	@Autowired
-	ProductDetailService productDetailService;
-	
-	@Autowired
-	StatisticalService statisticalService;
+    @Autowired
+    private OrderService orderService;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private ProductDetailService productDetailService;
+    
+    @Autowired
+    private ReturnRequestService returnRequestService;
+    
+    @Autowired
+    private StatisticalService statisticalService;
 
-	@GetMapping("/statistical-overview")
-	@PreAuthorize("hasAnyAuthority('ADMIN','STAFF')")
-	public ResponseEntity<BaseResponse<WebsiteStatisticalResponse>> getWebsiteStats() throws Exception {
-	    BaseResponse<WebsiteStatisticalResponse> response = new BaseResponse<>();
-
-	    int totalUsers = userService.getAll().size();
-	    int totalProducts = productDetailService.getAll().size();
-	    int totalOrders = orderService.getAll().size();
-
-	    // Tổng doanh thu từ đơn hàng
-	    BigDecimal totalRevenue = orderService.getAll().stream()
-	        .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue())
-	        .map(Order::getTotalPrice)
-	        .reduce(BigDecimal.ZERO, BigDecimal::add);
-	    
-	    // Doanh thu ngày hiện tại
-        LocalDate today = LocalDate.now();
+    private boolean isValidOrderForRevenue(Order order, LocalDate date, String timeType) {
         ZoneId defaultZoneId = ZoneId.systemDefault();
-        BigDecimal dailyRevenue = orderService.getAll().stream()
-                .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue() && order.getCreatedAt().toInstant().atZone(defaultZoneId).toLocalDate().equals(today))
-                .map(Order::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        LocalDate orderDate = order.getCreatedAt().toInstant().atZone(defaultZoneId).toLocalDate();
+
+        // Kiểm tra đơn hàng đã giao thành công
+        boolean isDelivered = order.getStatus() == StatusOrderEnum.DELIVERED.getValue();
+
+        // Kiểm tra thời gian theo loại (ngày/tháng/năm)
+        boolean isValidTime;
+        switch (timeType) {
+            case "day":
+                isValidTime = orderDate.equals(date);
+                break;
+            case "month":
+                isValidTime = YearMonth.from(orderDate).equals(YearMonth.from(date));
+                break;
+            case "year":
+                isValidTime = orderDate.getYear() == date.getYear();
+                break;
+            case "all":
+                isValidTime = true; // Cho tổng doanh thu
+                break;
+            default:
+                isValidTime = false;
+                break;
+        }
+
+        // Kiểm tra không có yêu cầu trả hàng hợp lệ
+        List<ReturnRequest> returnRequests = returnRequestService.getReturnRequestsByOrderId(order.getId());
+        boolean hasNoValidReturnRequest = returnRequests.isEmpty() || 
+            returnRequests.stream().allMatch(request -> 
+                request.getStatus() == ReturnStatus.REJECTED || 
+                request.getStatus() == ReturnStatus.CANCELLED);
+
+        return isDelivered && isValidTime && hasNoValidReturnRequest;
+    }
+
+    private BigDecimal calculateRevenue(List<Order> orders, LocalDate date, String timeType) {
+        return orders.stream()
+            .filter(order -> isValidOrderForRevenue(order, date, timeType))
+            .map(Order::getTotalPrice)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @GetMapping("/statistical-overview")
+    @PreAuthorize("hasAnyAuthority('ADMIN','STAFF')")
+    public ResponseEntity<BaseResponse<WebsiteStatisticalResponse>> getStatisticalOverview() {
+        List<Order> allOrders = orderService.getAll();
+        LocalDate today = LocalDate.now();
+
+        // Tổng doanh thu từ đơn hàng
+        BigDecimal totalRevenue = calculateRevenue(allOrders, today, "all");
+
+        // Doanh thu ngày hiện tại
+        BigDecimal dailyRevenue = calculateRevenue(allOrders, today, "day");
 
         // Doanh thu tháng hiện tại
-        YearMonth currentMonth = YearMonth.now();
-        BigDecimal monthlyRevenue = orderService.getAll().stream()
-                .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue() && YearMonth.from(order.getCreatedAt().toInstant().atZone(defaultZoneId)).equals(currentMonth))
-                .map(Order::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal monthlyRevenue = calculateRevenue(allOrders, today, "month");
 
         // Doanh thu năm hiện tại
-        int currentYear = LocalDate.now().getYear();
-        BigDecimal yearlyRevenue = orderService.getAll().stream()
-                .filter(order -> order.getStatus() == StatusOrderEnum.DELIVERED.getValue() && order.getCreatedAt().toInstant().atZone(defaultZoneId).toLocalDate().getYear() == currentYear)
-                .map(Order::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal yearlyRevenue = calculateRevenue(allOrders, today, "year");
 
-	    WebsiteStatisticalResponse data = new WebsiteStatisticalResponse(
-	        totalUsers, totalRevenue, totalProducts, totalOrders,
-				dailyRevenue, monthlyRevenue, yearlyRevenue
-	    );
-	    response.setData(data);
+        // Tổng số đơn hàng
+        int totalOrders = allOrders.size();
 
-	    return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+        // Tổng số người dùng
+        int totalUsers = 0;
+		try {
+			totalUsers = userService.getAll().size();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+        // Tổng số sản phẩm
+        int totalProducts = productDetailService.getAll().size();
+
+        // Tạo response
+        WebsiteStatisticalResponse data = new WebsiteStatisticalResponse(
+            totalUsers, totalRevenue, totalProducts, totalOrders,
+            dailyRevenue, monthlyRevenue, yearlyRevenue
+        );
+
+        BaseResponse<WebsiteStatisticalResponse> response = new BaseResponse<>();
+        response.setData(data);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 	
 	@GetMapping("/amount")
 	@PreAuthorize("hasAnyAuthority('ADMIN','STAFF')")
