@@ -91,16 +91,20 @@ public class AdminController extends BaseController {
         LocalDate today = LocalDate.now();
 
         // Tổng doanh thu từ đơn hàng
-        BigDecimal totalRevenue = calculateRevenue(allOrders, today, "all");
+//        BigDecimal totalRevenue =  calculateRevenue(allOrders, today, "all");
+        BigDecimal totalRevenue = BigDecimal.ZERO;
 
         // Doanh thu ngày hiện tại
-        BigDecimal dailyRevenue = calculateRevenue(allOrders, today, "day");
+//        BigDecimal dailyRevenue = calculateRevenue(allOrders, today, "day");
+        BigDecimal dailyRevenue = BigDecimal.ZERO;
 
         // Doanh thu tháng hiện tại
-        BigDecimal monthlyRevenue = calculateRevenue(allOrders, today, "month");
+//        BigDecimal monthlyRevenue = calculateRevenue(allOrders, today, "month");
+        BigDecimal monthlyRevenue = BigDecimal.ZERO;
 
         // Doanh thu năm hiện tại
-        BigDecimal yearlyRevenue = calculateRevenue(allOrders, today, "year");
+//        BigDecimal yearlyRevenue = calculateRevenue(allOrders, today, "year");
+        BigDecimal yearlyRevenue = BigDecimal.ZERO;
 
         // Tổng số đơn hàng
         int totalOrders = allOrders.size();

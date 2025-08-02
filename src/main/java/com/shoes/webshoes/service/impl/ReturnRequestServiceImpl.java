@@ -165,17 +165,17 @@ public class ReturnRequestServiceImpl implements ReturnRequestService {
         createHistory(id, ReturnStatus.APPROVED.name(), "Admin duyệt yêu cầu " + returnRequest.getReturnType().name().toLowerCase(), null);
         
         // Xử lý tồn kho dựa trên loại trả hàng
-        if (returnRequest.getReturnType().isReturnType()) {
-            // Hoàn trả hàng: cộng lại tồn kho cho sản phẩm
-            List<ReturnRequestDetail> details = returnRequestDetailDao.findByReturnRequestId(id);
-            for (ReturnRequestDetail detail : details) {
-                var productDetail = productDetailService.findOne(detail.getProductDetailId());
-                if (productDetail != null) {
-                    productDetail.setStock(productDetail.getStock() + detail.getQuantity());
-                    productDetailService.update(productDetail);
-                }
-            }
-        }
+//        if (returnRequest.getReturnType().isReturnType()) {
+//            // Hoàn trả hàng: cộng lại tồn kho cho sản phẩm
+//            List<ReturnRequestDetail> details = returnRequestDetailDao.findByReturnRequestId(id);
+//            for (ReturnRequestDetail detail : details) {
+//                var productDetail = productDetailService.findOne(detail.getProductDetailId());
+//                if (productDetail != null) {
+//                    productDetail.setStock(productDetail.getStock() + detail.getQuantity());
+//                    productDetailService.update(productDetail);
+//                }
+//            }
+//        }
         // Đổi hàng sẽ được xử lý riêng trong ExchangeRequestService
         
         return returnRequestDao.update(returnRequest);
