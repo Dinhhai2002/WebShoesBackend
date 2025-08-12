@@ -18,4 +18,7 @@ public class Statistical {
 	@Column(name="total_amount")
 	private BigDecimal totalAmount;
 	
+	@Column(name="total_amount_all")
+	private BigDecimal totalAmountAll;
+	
 }
