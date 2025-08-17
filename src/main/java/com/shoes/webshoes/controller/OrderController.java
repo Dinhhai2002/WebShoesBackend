@@ -43,6 +43,7 @@ import com.shoes.webshoes.entity.ProductDetail;
 import com.shoes.webshoes.entity.Users;
 import com.shoes.webshoes.entity.Voucher;
 import com.shoes.webshoes.model.StoreProcedureListResult;
+import com.shoes.webshoes.request.CRUDCustomerRequest;
 import com.shoes.webshoes.request.CRUDOrderRequest;
 import com.shoes.webshoes.request.ChangePaymentStatusRequest;
 import com.shoes.webshoes.request.ChangeStatusOrderRequest;
@@ -50,6 +51,7 @@ import com.shoes.webshoes.request.StaffOrderProductRequest;
 import com.shoes.webshoes.request.StaffOrderRequest;
 import com.shoes.webshoes.response.BaseListDataResponse;
 import com.shoes.webshoes.response.BaseResponse;
+import com.shoes.webshoes.response.CustomerResponse;
 import com.shoes.webshoes.response.OrderDetailResponse;
 import com.shoes.webshoes.response.OrderResponse;
 import com.shoes.webshoes.response.ProductDetailResponse;
@@ -58,6 +60,7 @@ import com.shoes.webshoes.security.ConfigVnpay;
 import com.shoes.webshoes.service.AddressBookService;
 import com.shoes.webshoes.service.CartDetailService;
 import com.shoes.webshoes.service.CartService;
+import com.shoes.webshoes.service.CustomerService;
 import com.shoes.webshoes.service.OrderDetailService;
 import com.shoes.webshoes.service.OrderService;
 import com.shoes.webshoes.service.ProductDetailService;
@@ -86,6 +89,9 @@ public class OrderController extends BaseController {
 
 	@Autowired
 	public AddressBookService addressBookService;
+
+	@Autowired
+	public CustomerService customerService;
 
 	@GetMapping("")
 	public ResponseEntity<BaseResponse<BaseListDataResponse<OrderResponse>>> getAll(
@@ -436,11 +442,22 @@ public class OrderController extends BaseController {
 		Users currentUser = this.getUser(); // Nhân viên tạo đơn
 
 		// Kiểm tra địa chỉ giao hàng
-		AddressBook shippingAddress = addressBookService.findOne(request.getAddressId());
-		if (shippingAddress == null || shippingAddress.getUserId() != currentUser.getId()) {
-			response.setStatus(HttpStatus.BAD_REQUEST);
-			response.setMessageError(StringErrorValue.ADDRESS_NOT_FOUND);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+//		AddressBook shippingAddress = addressBookService.findOne(request.getAddressId());
+//		if (shippingAddress == null || shippingAddress.getUserId() != currentUser.getId()) {
+//			response.setStatus(HttpStatus.BAD_REQUEST);
+//			response.setMessageError(StringErrorValue.ADDRESS_NOT_FOUND);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+
+		// Kiểm tra khách hàng
+		if (request.getCustomerPhone() != null && request.getCustomerName() != null) {
+			List<CustomerResponse> customer = customerService.findByPhone(request.getCustomerPhone());
+			if (customer == null || customer.isEmpty()) {
+				CRUDCustomerRequest customerRequest = new CRUDCustomerRequest();
+				customerRequest.setName(request.getCustomerName());
+				customerRequest.setPhone(request.getCustomerPhone());
+				customerService.create(customerRequest);
+			}
 		}
 
 		// Lấy danh sách sản phẩm từ request
@@ -461,9 +478,38 @@ public class OrderController extends BaseController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		}
+		Order order = new Order();
+		// Kiểm tra voucher nếu có
+		if (request.getVoucherId() != null  && request.getVoucherId() > 0) {
+			Voucher voucher = voucherService.findOne(request.getVoucherId());
+
+			if (voucher == null) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError(StringErrorValue.VOUCHER_NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+
+			// Kiểm tra điều kiện voucher
+			if (!voucher.isCurrentDateInRange() || voucher.isNumberLimit()
+					|| request.getTotalPrice().compareTo(voucher.getMinOrderValue()) < 0) {
+				response.setStatus(HttpStatus.BAD_REQUEST);
+				response.setMessageError(StringErrorValue.VOUCHER_IS_NOT_APPLY);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+
+			// Cập nhật số lần sử dụng voucher
+			voucher.setUsedCount(voucher.getUsedCount() + 1);
+			voucherService.update(voucher);
+
+			// Áp dụng giảm giá vào đơn hàng
+
+			order.setVoucherId(request.getVoucherId());
+		} else {
+			order.setVoucherId(0);
+		}
 
 		// Tạo đơn hàng
-		Order order = new Order();
+		
 		order.setUserId(currentUser.getId());
 		order.setPrice(request.getPrice());
 		order.setDiscountAmount(request.getDiscountAmount());
@@ -474,16 +520,16 @@ public class OrderController extends BaseController {
 		order.setCustomerPhone(request.getCustomerPhone());
 
 		// Gán địa chỉ giao hàng
-		order.setAddressId(shippingAddress.getId());
-		order.setShippingName(shippingAddress.getFullName());
-		order.setShippingPhone(shippingAddress.getPhone());
-		order.setShippingWardId(shippingAddress.getWardId());
-		order.setShippingWardName(shippingAddress.getWardName());
-		order.setShippingDistrictId(shippingAddress.getDistrictId());
-		order.setShippingDistrictName(shippingAddress.getDistrictName());
-		order.setShippingCityId(shippingAddress.getCityId());
-		order.setShippingCityName(shippingAddress.getCityName());
-		order.setShippingAddress(shippingAddress.getFullAddress());
+		order.setAddressId(0);
+		order.setShippingName("");
+		order.setShippingPhone("");
+		order.setShippingWardId(0);
+		order.setShippingWardName("");
+		order.setShippingDistrictId(0);
+		order.setShippingDistrictName("");
+		order.setShippingCityId(0);
+		order.setShippingCityName("");
+		order.setShippingAddress("");
 
 		orderService.create(order);
 

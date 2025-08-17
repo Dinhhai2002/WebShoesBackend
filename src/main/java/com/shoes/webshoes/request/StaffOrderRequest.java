@@ -31,12 +31,19 @@ public class StaffOrderRequest {
 	@NotNull(message = "Địa chỉ giao hàng không được để trống")
 	@JsonProperty("address_id")
 	private Integer addressId;
+	
+	@JsonProperty("voucher_id")
+	private Integer voucherId;
 
 	@NotEmpty(message = "Danh sách sản phẩm không được để trống")
 	@JsonProperty("products")
 	private List<StaffOrderProductRequest> products;
 	
-	@NotEmpty(message = "Số điện thoại khách hàng không được để trống")
     @JsonProperty("customer_phone")
     private String customerPhone;
+
+	@JsonProperty("customer_name")
+    private String customerName;
+
+
 }
