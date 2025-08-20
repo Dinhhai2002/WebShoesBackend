@@ -106,7 +106,6 @@ public class ExchangeRequestController {
 
     // Admin: Lấy tất cả yêu cầu đổi hàng
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<List<ExchangeRequestResponse>>> getAllExchangeRequests() {
         try {
             List<ExchangeRequest> exchangeRequests = exchangeRequestService.getAllExchangeRequests();

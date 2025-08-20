@@ -32,6 +32,9 @@ public class CustomerServiceImpl implements CustomerService {
                 throw new TechresHttpException(HttpStatus.BAD_REQUEST, "Số điện thoại đã tồn tại");
             }
         }
+        if(request.getPhone() != null && !request.getPhone().startsWith("0")) {
+        	throw new TechresHttpException(HttpStatus.BAD_REQUEST, "Dữ liệu tạo khách hàng không hợp lệ");
+        }
 
         Customer customer = new Customer();
         customer.setName(request.getName());

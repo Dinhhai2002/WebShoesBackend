@@ -1,12 +1,12 @@
 package com.shoes.webshoes.response;
 
-import com.shoes.webshoes.entity.Customer;
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.shoes.webshoes.entity.Customer;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import java.sql.Timestamp;
 
 @Getter
 @Setter
@@ -15,13 +15,15 @@ public class CustomerResponse {
     private String name;
     private String phone;
     @JsonProperty("created_at")
-    private Timestamp createdAt;
+    private Date createdAt;
     @JsonProperty("updated_at")
-    private Timestamp updatedAt;
+    private Date updatedAt;
 
     public CustomerResponse(Customer customer) {
         this.id = customer.getId();
         this.name = customer.getName();
         this.phone = customer.getPhone();
+        this.createdAt = customer.getCreatedAt();
+        this.updatedAt = customer.getUpdatedAt();
     }
 }
