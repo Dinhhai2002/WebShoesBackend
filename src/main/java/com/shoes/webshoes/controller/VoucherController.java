@@ -114,6 +114,7 @@ public class VoucherController extends BaseController {
 
 		List<Voucher> availableVouchers = voucherService.getAll().stream().filter(Voucher::isCurrentDateInRange)
 				.filter(voucher -> !voucher.isNumberLimit())
+				.filter(voucher -> voucher.getStatus() == 1)
 				.filter(voucher -> totalAmount.compareTo(voucher.getMinOrderValue()) >= 0).collect(Collectors.toList());
 
 		BigDecimal bestDiscountAmount = BigDecimal.ZERO;
