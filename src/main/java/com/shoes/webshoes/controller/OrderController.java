@@ -450,7 +450,7 @@ public class OrderController extends BaseController {
 //		}
 
 		// Kiểm tra khách hàng
-		if (request.getCustomerPhone() != null && request.getCustomerName() != null) {
+		if (request.getCustomerPhone() != null && !"".equals(request.getCustomerPhone()) && request.getCustomerName() != null && !"".equals(request.getCustomerName())) {
 			List<CustomerResponse> customer = customerService.findByPhone(request.getCustomerPhone());
 			if (customer == null || customer.isEmpty()) {
 				CRUDCustomerRequest customerRequest = new CRUDCustomerRequest();

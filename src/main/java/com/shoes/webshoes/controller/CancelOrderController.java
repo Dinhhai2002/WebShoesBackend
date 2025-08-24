@@ -30,13 +30,15 @@ public class CancelOrderController {
     public ResponseEntity<BaseResponse<BaseListDataResponse<CancelOrderResponse>>> getAll(
             @RequestParam(name = "user_id", required = false, defaultValue = "-1") int userId,
             @RequestParam(name = "key_search", required = false, defaultValue = "") String keySearch,
-            @RequestParam(name = "status", required = false, defaultValue = "") String status,
+            @RequestParam(name = "status", required = false, defaultValue = "-1") String status,
             @RequestParam(name = "page", required = false, defaultValue = "1") int page,
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit) throws Exception {
         
         BaseResponse<BaseListDataResponse<CancelOrderResponse>> response = new BaseResponse<>();
         Pagination pagination = new Pagination(page, limit);
-        
+        if("-1".equals(status)) {
+        	status = "";
+        }
         // Convert userId to -1 if null (no filter)
         Integer userIdParam = (userId == -1) ? -1 : userId;
         
