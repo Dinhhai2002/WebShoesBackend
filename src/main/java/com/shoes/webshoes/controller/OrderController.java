@@ -368,7 +368,7 @@ public class OrderController extends BaseController {
 
 			// Kiểm tra điều kiện voucher
 			if (!voucher.isCurrentDateInRange() || voucher.isNumberLimit()
-					|| wrapper.getTotalPrice().compareTo(voucher.getMinOrderValue()) < 0) {
+					|| wrapper.getPrice().compareTo(voucher.getMinOrderValue()) < 0) {
 				response.setStatus(HttpStatus.BAD_REQUEST);
 				response.setMessageError(StringErrorValue.VOUCHER_IS_NOT_APPLY);
 				return new ResponseEntity<>(response, HttpStatus.OK);
@@ -491,7 +491,7 @@ public class OrderController extends BaseController {
 
 			// Kiểm tra điều kiện voucher
 			if (!voucher.isCurrentDateInRange() || voucher.isNumberLimit()
-					|| request.getTotalPrice().compareTo(voucher.getMinOrderValue()) < 0) {
+					|| request.getPrice().compareTo(voucher.getMinOrderValue()) <= 0) {
 				response.setStatus(HttpStatus.BAD_REQUEST);
 				response.setMessageError(StringErrorValue.VOUCHER_IS_NOT_APPLY);
 				return new ResponseEntity<>(response, HttpStatus.OK);
