@@ -11,6 +11,7 @@ import com.shoes.webshoes.dao.ExchangeRequestDetailDAO;
 import com.shoes.webshoes.dao.ReturnRequestDAO;
 import com.shoes.webshoes.entity.ExchangeRequest;
 import com.shoes.webshoes.entity.ExchangeRequestDetail;
+import com.shoes.webshoes.entity.ProductDetail;
 import com.shoes.webshoes.entity.ReturnRequest;
 import com.shoes.webshoes.request.ExchangeRequestRequest;
 import com.shoes.webshoes.request.ApproveExchangeRequestRequest;
@@ -54,6 +55,13 @@ public class ExchangeRequestServiceImpl implements ExchangeRequestService {
         ExchangeRequest existed = exchangeRequestDao.findByReturnRequestId(request.getReturnRequestId());
         if (existed != null) {
             throw new RuntimeException("Đã có yêu cầu đổi hàng cho return request này!");
+        }
+        ProductDetail productDetail = productDetailService.findOne(request.getDetails().get(0).getNewProductDetailId());
+        if(productDetail == null) {
+            throw new RuntimeException("Sản phẩm mới không tồn tại!");
+        }
+        if(productDetail.getStock() < request.getDetails().get(0).getQuantity()) {
+            throw new RuntimeException("Sản phẩm " + productDetail.getName() + " không đủ tồn kho!");
         }
         
         // Tạo ExchangeRequest
