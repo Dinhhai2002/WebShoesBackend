@@ -27,6 +27,7 @@ import com.shoes.webshoes.entity.Brand;
 import com.shoes.webshoes.entity.Category;
 import com.shoes.webshoes.entity.Image;
 import com.shoes.webshoes.entity.Product;
+import com.shoes.webshoes.entity.ProductDetail;
 import com.shoes.webshoes.model.StoreProcedureListResult;
 import com.shoes.webshoes.request.CRUDProductRequest;
 import com.shoes.webshoes.response.BaseListDataResponse;
@@ -35,6 +36,7 @@ import com.shoes.webshoes.response.ProductResponse;
 import com.shoes.webshoes.service.BrandService;
 import com.shoes.webshoes.service.CategoryService;
 import com.shoes.webshoes.service.ImageService;
+import com.shoes.webshoes.service.ProductDetailService;
 import com.shoes.webshoes.service.ProductService;
 import com.shoes.webshoes.service.impl.FirebaseImageService;
 
@@ -60,6 +62,9 @@ public class ProductController  {
 	
 	@Autowired
 	ImageService imageService;
+	
+	@Autowired
+	ProductDetailService productDetailService;
 
 
     @GetMapping("")
@@ -213,6 +218,11 @@ public class ProductController  {
 		product.setDescription(wrapper.getDescription());
 		product.setPrice(wrapper.getPrice());
 		productService.update(product);
+		List<ProductDetail> productDetails = productDetailService.spGListProductDetail(product.getId(), -1, -1, -1, -1, -1, "", -1, new Pagination(0, 1000)).getResult();
+		productDetails.stream().forEach(p -> {
+			p.setPrice(product.getPrice());
+			productDetailService.update(p);
+		});
 
 		response.setData(new ProductResponse(product));
 		return new ResponseEntity<>(response, HttpStatus.OK);
