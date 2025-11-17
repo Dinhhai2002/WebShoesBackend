@@ -83,7 +83,7 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            cleanWs cleanWhenFailure: false, notFailBuild: true
         }
         success {
             echo '''
