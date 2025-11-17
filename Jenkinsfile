@@ -50,19 +50,25 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'webshoes-prod-config', variable: 'PROD_CONFIG')]) {
                     sh '''
-                        echo "Đang deploy phiên bản production với config bảo mật..."
+                        echo "Đang deploy WebShoes với config bảo mật..."
                         
                         docker stop webshoes || true
                         docker rm webshoes || true
                         docker pull dinhhai123/webshoes:latest
+
+                        # Tạo thư mục tạm để copy config vào (đảm bảo file tồn tại trong container)
+                        mkdir -p /tmp/webshoes-config
                         
+                        # Copy file config từ Jenkins vào thư mục tạm trên host
+                        cp $PROD_CONFIG /tmp/webshoes-config/application.properties
+
                         docker run -d \
                             --name webshoes \
                             -p 8081:8080 \
                             --restart unless-stopped \
-                            -v $PROD_CONFIG:/application.properties \
-                            -e SPRING_PROFILES_ACTIVE=prod \
+                            -v /tmp/webshoes-config/application.properties:/application.properties \
                             -e SPRING_CONFIG_LOCATION=file:/application.properties \
+                            -e JAVA_OPTS="-Xms512m -Xmx1024m" \
                             dinhhai123/webshoes:latest
                     '''
                 }
