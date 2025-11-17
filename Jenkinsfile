@@ -2,9 +2,8 @@ pipeline {
     // QUAN TRỌNG NHẤT: Dùng Docker-in-Docker để luôn có docker command
     agent {
         docker {
-            image 'docker:dind'                              // Có sẵn docker CLI
+            image 'docker:dind'
             args '-v /var/run/docker.sock:/var/run/docker.sock --privileged'
-            label 'docker'                                   // nếu bạn có node có label docker thì thêm dòng này
         }
     }
 
