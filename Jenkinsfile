@@ -45,28 +45,22 @@ pipeline {
             }
         }
 
-        // === DEPLOY BẢO MẬT NHẤT: DÙNG SECRET FILE ===
         stage('Deploy Production') {
             steps {
                 withCredentials([file(credentialsId: 'webshoes-prod-config', variable: 'PROD_CONFIG')]) {
                     sh '''
-                        echo "=== Đang deploy WebShoes Production ==="
+                        echo "=== Đang deploy WebShoes (không dùng profile) ==="
                         
-                        # Dừng & xóa container cũ
                         docker stop webshoes || true
                         docker rm webshoes || true
-                        
-                        # Pull image mới nhất
                         docker pull dinhhai123/webshoes:latest
 
-                       
                         docker run -d \
                             --name webshoes \
                             -p 8081:8080 \
                             --restart unless-stopped \
-                            -v $PROD_CONFIG:/config/application.properties:ro \
-                            -e SPRING_CONFIG_LOCATION=file:/config/application.properties \
-                            -e SPRING_PROFILES_ACTIVE=prod \
+                            -v $PROD_CONFIG:/application.properties:ro \
+                            -e SPRING_CONFIG_LOCATION=file:/application.properties \
                             -e JAVA_OPTS="-Xms512m -Xmx1024m" \
                             dinhhai123/webshoes:latest
 
