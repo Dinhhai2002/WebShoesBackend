@@ -2,9 +2,15 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')  // ID trong Jenkins Credentials
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         IMAGE_NAME            = 'dinhhai123/webshoes'
         IMAGE_TAG             = "${BUILD_NUMBER}"
+    }
+
+    // TỰ ĐỘNG CÀI JDK + MAVEN TRƯỚC KHI CHẠY
+    tools {
+        jdk 'JDK17'      // tên này sẽ tạo ở bước dưới
+        maven 'Maven3'   // tên này sẽ tạo ở bước dưới
     }
 
     stages {
@@ -16,18 +22,16 @@ pipeline {
 
         stage('Build Maven') {
             steps {
+                sh 'mvn --version'  // kiểm tra xem đã có mvn chưa
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        // DÙNG DOCKER PIPELINE PLUGIN – KHÔNG CẦN LỆNH docker TRONG CONTAINER NỮA
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    // Build image
                     def dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", ".")
                     
-                    // Push lên Docker Hub (tự động login + logout)
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
                         dockerImage.push("${IMAGE_TAG}")
                         dockerImage.push('latest')
@@ -36,7 +40,6 @@ pipeline {
             }
         }
 
-        // Dọn dẹp image local để tiết kiệm dung lượng agent
         stage('Cleanup Local Images') {
             steps {
                 sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
@@ -44,7 +47,6 @@ pipeline {
             }
         }
 
-        // Deploy trực tiếp trên máy đang chạy Jenkins (hoặc server có Docker)
         stage('Deploy') {
             steps {
                 sh '''
@@ -63,11 +65,10 @@ pipeline {
 
     post {
         always {
-            // Không cần docker logout nữa vì docker.withRegistry tự xử lý
-            cleanWs()  // dọn workspace (tùy chọn)
+            cleanWs()
         }
         success {
-            echo '=== DEPLOY THÀNH CÔNG - WEB SHOES ĐÃ CHẠY TRÊN PORT 8081 ==='
+            echo '=== DEPLOY THÀNH CÔNG - TRUY CẬP http://localhost:8081 ==='
         }
         failure {
             echo '=== DEPLOY THẤT BẠI ==='
