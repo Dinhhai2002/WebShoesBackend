@@ -63,7 +63,9 @@ pipeline {
 
     post {
         always {
-            cleanWs cleanWhenFailure: false, notFailBuild: true
+            node('built-in') {           // hoặc để trống node() cũng được
+                cleanWs()
+            }
         }
         success {
             echo '''
