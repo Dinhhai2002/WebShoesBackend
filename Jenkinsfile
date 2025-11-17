@@ -49,22 +49,34 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'webshoes-prod-config', variable: 'PROD_CONFIG')]) {
                     sh '''
-                        echo "=== Đang deploy WebShoes (không dùng profile) ==="
+                        echo "=== Đang deploy WebShoes - External Config Fix ==="
                         
+                        # Dừng & xóa container cũ
                         docker stop webshoes || true
                         docker rm webshoes || true
+                        
+                        # Pull image mới nhất
                         docker pull dinhhai123/webshoes:latest
 
+                        # Tạo thư mục config chuẩn trên host (Spring Boot tự tìm ở đây)
+                        mkdir -p /tmp/config
+                        
+                        # Copy file từ credential vào thư mục chuẩn (tránh lỗi mount trực tiếp)
+                        cp $PROD_CONFIG /tmp/config/application.properties
+                        
+                        # Mount vào /config/ (vị trí chuẩn của Spring Boot) + dùng location kết hợp
                         docker run -d \
                             --name webshoes \
                             -p 8081:8080 \
                             --restart unless-stopped \
-                            -v $PROD_CONFIG:/application.properties:ro \
-                            -e SPRING_CONFIG_LOCATION=file:/application.properties \
+                            -v /tmp/config/application.properties:/config/application.properties:ro \
+                            -e SPRING_CONFIG_LOCATION="classpath:/application.properties,file:/config/" \
                             -e JAVA_OPTS="-Xms512m -Xmx1024m" \
                             dinhhai123/webshoes:latest
 
-                        echo "Deploy thành công! Truy cập: http://localhost:8081"
+                        echo "Deploy thành công! Chờ 10s để kiểm tra log..."
+                        sleep 10
+                        docker logs webshoes | tail -20
                     '''
                 }
             }
