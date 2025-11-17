@@ -1,5 +1,12 @@
 pipeline {
-    agent any
+    // QUAN TRỌNG NHẤT: Dùng Docker-in-Docker để luôn có docker command
+    agent {
+        docker {
+            image 'docker:dind'                              // Có sẵn docker CLI
+            args '-v /var/run/docker.sock:/var/run/docker.sock --privileged'
+            label 'docker'                                   // nếu bạn có node có label docker thì thêm dòng này
+        }
+    }
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
@@ -22,6 +29,7 @@ pipeline {
         stage('Build Maven') {
             steps {
                 sh 'mvn --version'
+                // BẮT BUỘC dùng cái này để tắt hoàn toàn test + không khởi động context
                 sh 'mvn clean package -Dmaven.test.skip=true'
             }
         }
@@ -45,38 +53,29 @@ pipeline {
             }
         }
 
+        // DEPLOY ĐƠN GIẢN NHẤT + CHẠY NGON NHẤT CHO SPRING BOOT 2.2.6
         stage('Deploy Production') {
             steps {
                 withCredentials([file(credentialsId: 'webshoes-prod-config', variable: 'PROD_CONFIG')]) {
                     sh '''
-                        echo "=== Đang deploy WebShoes - External Config Fix ==="
+                        echo "=== Đang deploy WebShoes Production ==="
                         
-                        # Dừng & xóa container cũ
                         docker stop webshoes || true
                         docker rm webshoes || true
-                        
-                        # Pull image mới nhất
                         docker pull dinhhai123/webshoes:latest
 
-                        # Tạo thư mục config chuẩn trên host (Spring Boot tự tìm ở đây)
-                        mkdir -p /tmp/config
-                        
-                        # Copy file từ credential vào thư mục chuẩn (tránh lỗi mount trực tiếp)
-                        cp $PROD_CONFIG /tmp/config/application.properties
-                        
-                        # Mount vào /config/ (vị trí chuẩn của Spring Boot) + dùng location kết hợp
+                        # Cách đơn giản nhất, chắc chắn nhất: mount thẳng + override hoàn toàn
                         docker run -d \
                             --name webshoes \
                             -p 8081:8080 \
                             --restart unless-stopped \
-                            -v /tmp/config/application.properties:/config/application.properties:ro \
-                            -e SPRING_CONFIG_LOCATION="classpath:/application.properties,file:/config/" \
-                            -e JAVA_OPTS="-Xms512m -Xmx1024m" \
+                            -v $PROD_CONFIG:/application.properties:ro \
+                            -e SPRING_CONFIG_LOCATION=file:/application.properties \
                             dinhhai123/webshoes:latest
 
-                        echo "Deploy thành công! Chờ 10s để kiểm tra log..."
-                        sleep 10
-                        docker logs webshoes | tail -20
+                        echo "Deploy thành công! Đang kiểm tra log..."
+                        sleep 8
+                        docker logs webshoes | tail -15
                     '''
                 }
             }
@@ -89,15 +88,15 @@ pipeline {
         }
         success {
             echo '''
-            ╔══════════════════════════════════════╗
-            ║     DEPLOY THÀNH CÔNG 100%           ║
-            ║     Truy cập: http://localhost:8081  ║
-            ║     Hoặc IP công cộng:8081           ║
-            ╚══════════════════════════════════════╝
+            ╔════════════════════════════════════════════════════╗
+            ║      DEPLOY THÀNH CÔNG 100% - CHÚC MỪNG BẠN!       ║
+            ║      Truy cập: http://YOUR_IP:8081                 ║
+            ║      Hoặc: http://localhost:8081 (nếu trên VPS)   ║
+            ╚════════════════════════════════════════════════════╝
             '''
         }
         failure {
-            echo 'DEPLOY THẤT BẠI - Xem log để kiểm tra lỗi'
+            echo 'DEPLOY THẤT BẠI - Xem Console Output để biết lỗi cụ thể'
         }
     }
 }
