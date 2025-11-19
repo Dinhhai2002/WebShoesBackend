@@ -294,7 +294,7 @@
 				</configuration>
 			</plugin>
 			
-			 <plugin>
+			 <!-- <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.12</version>
@@ -313,7 +313,7 @@
 				</configuration>
                  <executions><execution><id>default</id><goals><goal>prepare-agent</goal></goals></execution><execution><id>default-report</id><phase>prepare-package</phase><goals><goal>report</goal></goals></execution></executions>
                
-            </plugin>
+            </plugin> -->
             
             	
 			<plugin>
